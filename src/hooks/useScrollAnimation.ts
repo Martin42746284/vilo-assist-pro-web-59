@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
 
-export const useScrollAnimation = (threshold: number = 0.1) => {
+export const useScrollAnimation = () => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -11,25 +11,16 @@ export const useScrollAnimation = (threshold: number = 0.1) => {
           setIsVisible(true);
         }
       },
-      { threshold }
+      { threshold: 0.1 }
     );
 
-    return observer;
-  }, [threshold]);
+    const elements = document.querySelectorAll('[data-scroll-animate]');
+    elements.forEach((element) => observer.observe(element));
 
-  return { isVisible, setIsVisible };
-};
+    return () => {
+      elements.forEach((element) => observer.unobserve(element));
+    };
+  }, []);
 
-export const useStaggeredAnimation = (itemCount: number, delay: number = 100) => {
-  const [visibleItems, setVisibleItems] = useState<number[]>([]);
-
-  const triggerStaggered = () => {
-    for (let i = 0; i < itemCount; i++) {
-      setTimeout(() => {
-        setVisibleItems(prev => [...prev, i]);
-      }, i * delay);
-    }
-  };
-
-  return { visibleItems, triggerStaggered };
+  return isVisible;
 };
