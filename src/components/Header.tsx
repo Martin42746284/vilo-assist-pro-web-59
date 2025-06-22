@@ -14,8 +14,21 @@ const Header = () => {
     setIsMenuOpen(false);
   };
 
+  const navigationItems = [
+    { id: 'accueil', label: 'Accueil' },
+    { id: 'about', label: 'À propos' },
+    { id: 'services', label: 'Services' },
+    { id: 'process', label: 'Processus' },
+    { id: 'portfolio', label: 'Références' },
+    { id: 'calculator', label: 'Calculateur' },
+    { id: 'tarifs', label: 'Tarifs' },
+    { id: 'testimonials', label: 'Témoignages' },
+    { id: 'faq', label: 'FAQ' },
+    { id: 'contact', label: 'Contact' }
+  ];
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-vilo-purple-100">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-vilo-purple-100 shadow-sm">
       <div className="container mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-2">
@@ -28,31 +41,34 @@ const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            <button 
-              onClick={() => scrollToSection('accueil')}
-              className="text-gray-700 hover:text-vilo-purple-600 font-medium transition-colors"
-            >
-              Accueil
-            </button>
-            <button 
-              onClick={() => scrollToSection('services')}
-              className="text-gray-700 hover:text-vilo-purple-600 font-medium transition-colors"
-            >
-              Services
-            </button>
-            <button 
-              onClick={() => scrollToSection('tarifs')}
-              className="text-gray-700 hover:text-vilo-purple-600 font-medium transition-colors"
-            >
-              Tarifs
-            </button>
-            <button 
-              onClick={() => scrollToSection('contact')}
-              className="text-gray-700 hover:text-vilo-purple-600 font-medium transition-colors"
-            >
-              Contact
-            </button>
+          <nav className="hidden xl:flex space-x-6">
+            {navigationItems.slice(0, 6).map((item) => (
+              <button 
+                key={item.id}
+                onClick={() => scrollToSection(item.id)}
+                className="text-gray-700 hover:text-vilo-purple-600 font-medium transition-colors text-sm"
+              >
+                {item.label}
+              </button>
+            ))}
+            
+            {/* Dropdown for more items */}
+            <div className="relative group">
+              <button className="text-gray-700 hover:text-vilo-purple-600 font-medium transition-colors text-sm">
+                Plus ▼
+              </button>
+              <div className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 py-2 min-w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                {navigationItems.slice(6).map((item) => (
+                  <button 
+                    key={item.id}
+                    onClick={() => scrollToSection(item.id)}
+                    className="block w-full text-left px-4 py-2 text-gray-700 hover:text-vilo-purple-600 hover:bg-vilo-purple-50 transition-colors text-sm"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </nav>
 
           <Button 
@@ -64,7 +80,7 @@ const Header = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2"
+            className="xl:hidden p-2"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -73,32 +89,17 @@ const Header = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <nav className="md:hidden mt-4 pb-4 border-t border-vilo-purple-100">
-            <div className="flex flex-col space-y-3 pt-4">
-              <button 
-                onClick={() => scrollToSection('accueil')}
-                className="text-gray-700 hover:text-vilo-purple-600 font-medium transition-colors text-left"
-              >
-                Accueil
-              </button>
-              <button 
-                onClick={() => scrollToSection('services')}
-                className="text-gray-700 hover:text-vilo-purple-600 font-medium transition-colors text-left"
-              >
-                Services
-              </button>
-              <button 
-                onClick={() => scrollToSection('tarifs')}
-                className="text-gray-700 hover:text-vilo-purple-600 font-medium transition-colors text-left"
-              >
-                Tarifs
-              </button>
-              <button 
-                onClick={() => scrollToSection('contact')}
-                className="text-gray-700 hover:text-vilo-purple-600 font-medium transition-colors text-left"
-              >
-                Contact
-              </button>
+          <nav className="xl:hidden mt-4 pb-4 border-t border-vilo-purple-100">
+            <div className="grid grid-cols-2 gap-3 pt-4">
+              {navigationItems.map((item) => (
+                <button 
+                  key={item.id}
+                  onClick={() => scrollToSection(item.id)}
+                  className="text-gray-700 hover:text-vilo-purple-600 font-medium transition-colors text-left text-sm py-2"
+                >
+                  {item.label}
+                </button>
+              ))}
             </div>
           </nav>
         )}
