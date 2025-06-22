@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -35,19 +36,12 @@
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -97,5 +91,47 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Améliorations d'accessibilité */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Focus visible amélioré */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-vilo-purple-600;
+  }
+
+  /* Sélection de texte personnalisée */
+  ::selection {
+    @apply bg-vilo-purple-200 text-vilo-purple-900;
+  }
+
+  .dark ::selection {
+    @apply bg-vilo-purple-800 text-vilo-purple-100;
+  }
+}
+
+/* Utilitaires pour les animations fluides */
+@layer utilities {
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient 3s ease-in-out infinite;
+  }
+
+  @keyframes gradient {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
   }
 }

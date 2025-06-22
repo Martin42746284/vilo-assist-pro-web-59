@@ -1,4 +1,3 @@
-
 import Header from '@/components/Header';
 import HeroSection from '@/components/HeroSection';
 import AboutSection from '@/components/AboutSection';
@@ -11,10 +10,13 @@ import TestimonialsSection from '@/components/TestimonialsSection';
 import FAQSection from '@/components/FAQSection';
 import ContactSection from '@/components/ContactSection';
 import Footer from '@/components/Footer';
+import ScrollToTop from '@/components/ScrollToTop';
+import ScrollProgress from '@/components/ScrollProgress';
 
 const Index = () => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+      <ScrollProgress />
       <Header />
       <HeroSection />
       <AboutSection />
@@ -27,6 +29,7 @@ const Index = () => {
       <FAQSection />
       <ContactSection />
       <Footer />
+      <ScrollToTop />
     </div>
   );
 };
