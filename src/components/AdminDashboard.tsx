@@ -8,6 +8,12 @@ import { Contact, Appointment } from '@/types/database';
 import { Calendar, Mail, Phone, User, Clock, CheckCircle, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
+// Déclaration locale
+interface ItemType {
+  id: number;
+  name: string;
+}
+
 const AdminDashboard = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -28,8 +34,28 @@ const AdminDashboard = () => {
       if (contactsResponse.error) throw contactsResponse.error;
       if (appointmentsResponse.error) throw appointmentsResponse.error;
 
-      setContacts(contactsResponse.data || []);
-      setAppointments(appointmentsResponse.data || []);
+      const dataFromApi: ItemType[] = []; // tableau vide par défaut
+
+        return (
+          <div>
+            {dataFromApi.map(item => (
+              <p key={item.id}>{item.name}</p>
+            ))}
+          </div>
+        );
+
+      const contacts: Contact[] = dataFromApi.map((c: any) => ({
+        ...c,
+        status: c.status as "nouveau" | "traité" | "fermé"
+      }));
+      setContacts(contacts);
+
+      const appointments: Appointment[] = dataFromApi.map((a: any) => ({
+        ...a,
+        status: a.status as "en_attente" | "confirmé" | "annulé" | "terminé"
+      }));
+      setAppointments(appointments);
+
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
       toast({
@@ -41,6 +67,7 @@ const AdminDashboard = () => {
       setIsLoading(false);
     }
   };
+
 
   const updateContactStatus = async (id: string, status: 'nouveau' | 'traité' | 'fermé') => {
     try {
