@@ -2,12 +2,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Testimonial } from '@/types/database';
-import { useQuery } from '@tanstack/react-query';
 
 export const useTestimonials = () => {
-  const { data: testimonials = [], isLoading, error } = useQuery({
-    queryKey: ['testimonials'],
-    queryFn: async () => {
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchTestimonials = async () => {
+    setIsLoading(true);
+    try {
       const { data, error } = await supabase
         .from('testimonials')
         .select('*')
@@ -17,13 +19,21 @@ export const useTestimonials = () => {
         throw error;
       }
 
-      return data as Testimonial[];
-    },
-  });
+      setTestimonials(data || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des témoignages:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTestimonials();
+  }, []);
 
   return {
     testimonials,
     isLoading,
-    error
+    refetch: fetchTestimonials
   };
 };

@@ -18,6 +18,23 @@ export const useAppointments = () => {
         throw error;
       }
 
+      // Envoyer email de confirmation
+      try {
+        await supabase.functions.invoke('send-notification-email', {
+          body: {
+            to: appointmentData.client_email,
+            name: appointmentData.client_name,
+            type: 'appointment',
+            data: {
+              date: new Date(appointmentData.date).toLocaleDateString('fr-FR'),
+              time: appointmentData.time
+            }
+          }
+        });
+      } catch (emailError) {
+        console.log('Erreur envoi email (non bloquant):', emailError);
+      }
+
       toast({
         title: "Rendez-vous enregistré !",
         description: "Nous vous confirmerons votre créneau très bientôt.",

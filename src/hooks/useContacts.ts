@@ -18,6 +18,23 @@ export const useContacts = () => {
         throw error;
       }
 
+      // Envoyer email de confirmation
+      try {
+        await supabase.functions.invoke('send-notification-email', {
+          body: {
+            to: contactData.email,
+            name: contactData.name,
+            type: 'contact',
+            data: {
+              service: contactData.service,
+              message: contactData.message
+            }
+          }
+        });
+      } catch (emailError) {
+        console.log('Erreur envoi email (non bloquant):', emailError);
+      }
+
       toast({
         title: "Message envoyé !",
         description: "Nous vous répondrons dans les plus brefs délais.",

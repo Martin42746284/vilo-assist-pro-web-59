@@ -47,7 +47,15 @@ const ContactForm = () => {
   });
 
   const onSubmit = async (data: FormData) => {
-    const result = await submitContact(data);
+    // Assurer que toutes les propriétés sont définies
+    const contactData = {
+      name: data.name,
+      email: data.email,
+      service: data.service,
+      message: data.message,
+    };
+    
+    const result = await submitContact(contactData);
     if (result.success) {
       form.reset();
     }
