@@ -7,8 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { toast } from '@/hooks/use-toast';
 import {
   Form,
   FormControl,
@@ -24,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useContacts } from '@/hooks/useContacts';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
@@ -35,6 +34,8 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 const ContactForm = () => {
+  const { submitContact, isLoading } = useContacts();
+  
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -45,25 +46,10 @@ const ContactForm = () => {
     },
   });
 
-  const { isSubmitting } = form.formState;
-
   const onSubmit = async (data: FormData) => {
-    try {
-      // Simulation d'envoi (vous pouvez intégrer avec votre service d'email)
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast({
-        title: "Message envoyé !",
-        description: "Nous vous répondrons dans les plus brefs délais.",
-      });
-
+    const result = await submitContact(data);
+    if (result.success) {
       form.reset();
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Une erreur s'est produite. Veuillez réessayer.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -181,11 +167,11 @@ const ContactForm = () => {
 
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isLoading}
               className="w-full bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 hover:from-vilo-purple-700 hover:to-vilo-pink-700 text-white py-3 text-lg"
               size="lg"
             >
-              {isSubmitting ? (
+              {isLoading ? (
                 <>
                   <Loader2 className="mr-2 w-5 h-5 animate-spin" />
                   Envoi en cours...
