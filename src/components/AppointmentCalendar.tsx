@@ -1,9 +1,10 @@
 
 import { useState } from 'react';
-import { Calendar, Clock, User } from 'lucide-react';
+import { Calendar, Clock, User, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { toast } from '@/hooks/use-toast';
 
 const AppointmentCalendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -17,9 +18,24 @@ const AppointmentCalendar = () => {
     if (selectedDate && selectedTime) {
       const formattedDate = selectedDate.toLocaleDateString('fr-FR');
       const message = `Bonjour, je souhaiterais prendre rendez-vous le ${formattedDate} à ${selectedTime}`;
-      const whatsappUrl = `https://wa.me/YOUR_PHONE_NUMBER?text=${encodeURIComponent(message)}`;
-      window.open(whatsappUrl, '_blank');
+      const phoneNumber = "261348901234"; // Remplacez par votre vrai numéro
+      const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+      
+      toast({
+        title: "Redirection vers WhatsApp",
+        description: "Vous allez être redirigé vers WhatsApp pour confirmer votre rendez-vous.",
+      });
+      
+      setTimeout(() => {
+        window.open(whatsappUrl, '_blank');
+      }, 1000);
     }
+  };
+
+  const isDateDisabled = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return date < today || date.getDay() === 0 || date.getDay() === 6;
   };
 
   return (
@@ -36,7 +52,7 @@ const AppointmentCalendar = () => {
 
         <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
           {/* Calendrier */}
-          <Card>
+          <Card className="hover:shadow-lg transition-shadow duration-300">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Calendar className="w-5 h-5 mr-2 text-vilo-purple-600" />
@@ -48,14 +64,17 @@ const AppointmentCalendar = () => {
                 mode="single"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
-                disabled={(date) => date < new Date() || date.getDay() === 0 || date.getDay() === 6}
+                disabled={isDateDisabled}
                 className="rounded-md border"
               />
+              <p className="text-sm text-gray-500 mt-2">
+                Du lundi au vendredi uniquement
+              </p>
             </CardContent>
           </Card>
 
           {/* Créneaux horaires */}
-          <Card>
+          <Card className="hover:shadow-lg transition-shadow duration-300">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Clock className="w-5 h-5 mr-2 text-vilo-purple-600" />
@@ -69,7 +88,11 @@ const AppointmentCalendar = () => {
                     key={time}
                     variant={selectedTime === time ? "default" : "outline"}
                     onClick={() => setSelectedTime(time)}
-                    className={selectedTime === time ? "bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600" : ""}
+                    className={`transition-all duration-200 ${
+                      selectedTime === time 
+                        ? "bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 transform scale-105" 
+                        : "hover:scale-105"
+                    }`}
                   >
                     {time}
                   </Button>
@@ -77,15 +100,19 @@ const AppointmentCalendar = () => {
               </div>
 
               {selectedDate && selectedTime && (
-                <div className="mt-6 p-4 bg-vilo-purple-50 dark:bg-vilo-purple-900/20 rounded-lg">
+                <div className="mt-6 p-4 bg-vilo-purple-50 dark:bg-vilo-purple-900/20 rounded-lg border border-vilo-purple-200 dark:border-vilo-purple-700">
                   <div className="flex items-center mb-3">
-                    <User className="w-5 h-5 mr-2 text-vilo-purple-600" />
+                    <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
                     <span className="font-medium">Récapitulatif</span>
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
                     Rendez-vous le {selectedDate.toLocaleDateString('fr-FR')} à {selectedTime}
                   </p>
-                  <Button onClick={handleBooking} className="w-full bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600">
+                  <Button 
+                    onClick={handleBooking} 
+                    className="w-full bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 hover:from-vilo-purple-700 hover:to-vilo-pink-700 transform hover:scale-105 transition-all duration-200"
+                  >
+                    <User className="w-4 h-4 mr-2" />
                     Confirmer le rendez-vous
                   </Button>
                 </div>
