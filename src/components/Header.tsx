@@ -31,10 +31,40 @@ const Header = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <button 
+              onClick={() => scrollToSection('accueil')} 
+              className="text-gray-700 dark:text-gray-300 hover:text-vilo-purple-600 dark:hover:text-vilo-purple-400 transition-colors duration-300"
+            >
+              Accueil
+            </button>
+            <button 
+              onClick={() => scrollToSection('about')} 
+              className="text-gray-700 dark:text-gray-300 hover:text-vilo-purple-600 dark:hover:text-vilo-purple-400 transition-colors duration-300"
+            >
+              A propos
+            </button>
+            <button 
               onClick={() => scrollToSection('services')} 
               className="text-gray-700 dark:text-gray-300 hover:text-vilo-purple-600 dark:hover:text-vilo-purple-400 transition-colors duration-300"
             >
               Services
+            </button>
+            <button 
+              onClick={() => scrollToSection('process')} 
+              className="text-gray-700 dark:text-gray-300 hover:text-vilo-purple-600 dark:hover:text-vilo-purple-400 transition-colors duration-300"
+            >
+              Processus
+            </button>
+            <button 
+              onClick={() => scrollToSection('portfolio')} 
+              className="text-gray-700 dark:text-gray-300 hover:text-vilo-purple-600 dark:hover:text-vilo-purple-400 transition-colors duration-300"
+            >
+              Portfolio
+            </button>
+            <button 
+              onClick={() => scrollToSection('calculator')} 
+              className="text-gray-700 dark:text-gray-300 hover:text-vilo-purple-600 dark:hover:text-vilo-purple-400 transition-colors duration-300"
+            >
+              Votre Devis
             </button>
             <button 
               onClick={() => scrollToSection('tarifs')} 
@@ -43,10 +73,16 @@ const Header = () => {
               Tarifs
             </button>
             <button 
-              onClick={() => scrollToSection('portfolio')} 
+              onClick={() => scrollToSection('testimonials')} 
               className="text-gray-700 dark:text-gray-300 hover:text-vilo-purple-600 dark:hover:text-vilo-purple-400 transition-colors duration-300"
             >
-              Portfolio
+              Témoignages
+            </button>
+            <button 
+              onClick={() => scrollToSection('appointment')} 
+              className="text-gray-700 dark:text-gray-300 hover:text-vilo-purple-600 dark:hover:text-vilo-purple-400 transition-colors duration-300"
+            >
+              Rendez-vous
             </button>
             <button 
               onClick={() => scrollToSection('faq')} 

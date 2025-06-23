@@ -3,4 +3,4 @@ import App from './App.tsx'
 import './index.css'
 import Admin from './pages/Admin.tsx';
 
-createRoot(document.getElementById("root")!).render(<Admin />);
+createRoot(document.getElementById("root")!).render(<App />);
