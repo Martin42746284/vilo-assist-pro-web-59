@@ -1,3 +1,4 @@
+
 import Header from '@/components/Header';
 import HeroSection from '@/components/HeroSection';
 import AboutSection from '@/components/AboutSection';
@@ -12,24 +13,34 @@ import ContactSection from '@/components/ContactSection';
 import Footer from '@/components/Footer';
 import ScrollToTop from '@/components/ScrollToTop';
 import ScrollProgress from '@/components/ScrollProgress';
+import PerformanceIndicators from '@/components/PerformanceIndicators';
+import ChatWidget from '@/components/ChatWidget';
+import TrustNotification from '@/components/TrustNotification';
+import AppointmentCalendar from '@/components/AppointmentCalendar';
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       <ScrollProgress />
       <Header />
-      <HeroSection />
+      <section id="hero">
+        <HeroSection />
+      </section>
       <AboutSection />
       <ServicesSection />
       <ProcessSection />
+      <PerformanceIndicators />
       <PortfolioSection />
       <CostCalculator />
       <PricingSection />
       <TestimonialsSection />
+      <AppointmentCalendar />
       <FAQSection />
       <ContactSection />
       <Footer />
       <ScrollToTop />
+      <ChatWidget />
+      <TrustNotification />
     </div>
   );
 };

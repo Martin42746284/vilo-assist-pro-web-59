@@ -76,13 +76,13 @@ const TestimonialsSection = () => {
   };
 
   return (
-    <section id="testimonials" className="py-20 bg-white overflow-hidden">
+    <section id="testimonials" className="py-20 bg-white dark:bg-gray-900 overflow-hidden transition-colors duration-300">
       <div className="container mx-auto px-4">
         <div className={`text-center space-y-4 mb-16 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 bg-clip-text text-transparent">
             Ils nous font confiance
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Découvrez ce que nos clients pensent de nos services d'assistance virtuelle
           </p>
         </div>
@@ -95,7 +95,7 @@ const TestimonialsSection = () => {
             >
               {testimonials.map((testimonial, index) => (
                 <div key={index} className="w-full flex-shrink-0 px-4">
-                  <Card className="border-0 shadow-2xl bg-gradient-to-br from-vilo-purple-50 to-vilo-pink-50">
+                  <Card className="border-0 shadow-2xl bg-gradient-to-br from-vilo-purple-50 to-vilo-pink-50 dark:from-vilo-purple-900/20 dark:to-vilo-pink-900/20">
                     <CardContent className="p-8 md:p-12 text-center">
                       <div className="mb-6">
                         <Quote className="w-12 h-12 text-vilo-purple-400 mx-auto mb-4" />
@@ -106,7 +106,7 @@ const TestimonialsSection = () => {
                         </div>
                       </div>
                       
-                      <blockquote className="text-lg md:text-xl text-gray-700 mb-8 italic leading-relaxed">
+                      <blockquote className="text-lg md:text-xl text-gray-700 dark:text-gray-300 mb-8 italic leading-relaxed">
                         "{testimonial.content}"
                       </blockquote>
                       
@@ -115,9 +115,9 @@ const TestimonialsSection = () => {
                           {testimonial.avatar}
                         </div>
                         <div className="text-left">
-                          <div className="font-bold text-gray-800">{testimonial.name}</div>
-                          <div className="text-vilo-purple-600 font-medium">{testimonial.role}</div>
-                          <div className="text-gray-600 text-sm">{testimonial.company}</div>
+                          <div className="font-bold text-gray-800 dark:text-gray-200">{testimonial.name}</div>
+                          <div className="text-vilo-purple-600 dark:text-vilo-purple-400 font-medium">{testimonial.role}</div>
+                          <div className="text-gray-600 dark:text-gray-400 text-sm">{testimonial.company}</div>
                         </div>
                       </div>
                     </CardContent>
@@ -165,19 +165,19 @@ const TestimonialsSection = () => {
             <div className="text-4xl font-bold bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 bg-clip-text text-transparent mb-2">
               5+
             </div>
-            <div className="text-gray-600">Années d'expérience</div>
+            <div className="text-gray-600 dark:text-gray-300">Années d'expérience</div>
           </div>
           <div className="text-center">
             <div className="text-4xl font-bold bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 bg-clip-text text-transparent mb-2">
-              100+
+              150+
             </div>
-            <div className="text-gray-600">Clients satisfaits</div>
+            <div className="text-gray-600 dark:text-gray-300">Clients satisfaits</div>
           </div>
           <div className="text-center">
             <div className="text-4xl font-bold bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 bg-clip-text text-transparent mb-2">
               98%
             </div>
-            <div className="text-gray-600">Taux de satisfaction</div>
+            <div className="text-gray-600 dark:text-gray-300">Taux de satisfaction</div>
           </div>
         </div>
       </div>
