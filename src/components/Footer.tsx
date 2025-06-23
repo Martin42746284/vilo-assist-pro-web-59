@@ -7,7 +7,23 @@ const Footer = () => {
   };
 
   const handleEmail = () => {
-    window.location.href = 'mailto:info@viloassistpro.com';
+    const email = 'manampisoa.m@zurcher.edu.mg';
+    const subject = encodeURIComponent('Demande de contact');
+    const body = encodeURIComponent('Bonjour,\n\nJe vous contacte depuis votre site web.\n\nCordialement,');
+
+    const gmailURL = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${body}`;
+
+    try {
+      if (navigator.onLine) {
+        console.log('Ouverture de Gmail…');
+        window.open(gmailURL, '_blank');
+      } else {
+        alert("Veuillez vérifier votre connexion Internet avant d'envoyer un message.");
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'ouverture de Gmail :", error);
+      alert("Impossible d'ouvrir Gmail. Veuillez nous contacter manuellement à : " + email);
+    }
   };
 
   return (
@@ -64,7 +80,7 @@ const Footer = () => {
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-center md:text-left">
               <p className="text-vilo-purple-100">
-                © 2024 VILO ASSIST-PRO. Tous droits réservés.
+                © 2025 VILO ASSIST-PRO. Tous droits réservés.
               </p>
             </div>
             <div className="flex space-x-4">

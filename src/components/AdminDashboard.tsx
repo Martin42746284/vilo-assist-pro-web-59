@@ -1,18 +1,11 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { Contact, Appointment } from '@/types/database';
-import { Calendar, Mail, Phone, User, Clock, CheckCircle, X } from 'lucide-react';
+import { Calendar, Mail, Phone, User, Clock, CheckCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-
-// Déclaration locale
-interface ItemType {
-  id: number;
-  name: string;
-}
 
 const AdminDashboard = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -34,25 +27,15 @@ const AdminDashboard = () => {
       if (contactsResponse.error) throw contactsResponse.error;
       if (appointmentsResponse.error) throw appointmentsResponse.error;
 
-      const dataFromApi: ItemType[] = []; // tableau vide par défaut
-
-        return (
-          <div>
-            {dataFromApi.map(item => (
-              <p key={item.id}>{item.name}</p>
-            ))}
-          </div>
-        );
-
-      const contacts: Contact[] = dataFromApi.map((c: any) => ({
+      const contacts: Contact[] = (contactsResponse.data || []).map((c: any) => ({
         ...c,
-        status: c.status as "nouveau" | "traité" | "fermé"
+        status: c.status as 'nouveau' | 'traité' | 'fermé'
       }));
       setContacts(contacts);
 
-      const appointments: Appointment[] = dataFromApi.map((a: any) => ({
+      const appointments: Appointment[] = (appointmentsResponse.data || []).map((a: any) => ({
         ...a,
-        status: a.status as "en_attente" | "confirmé" | "annulé" | "terminé"
+        status: a.status as 'en_attente' | 'confirmé' | 'annulé' | 'terminé'
       }));
       setAppointments(appointments);
 
@@ -68,7 +51,6 @@ const AdminDashboard = () => {
     }
   };
 
-
   const updateContactStatus = async (id: string, status: 'nouveau' | 'traité' | 'fermé') => {
     try {
       const { error } = await supabase
@@ -78,7 +60,7 @@ const AdminDashboard = () => {
 
       if (error) throw error;
 
-      setContacts(prev => prev.map(contact => 
+      setContacts(prev => prev.map(contact =>
         contact.id === id ? { ...contact, status } : contact
       ));
 
@@ -105,7 +87,7 @@ const AdminDashboard = () => {
 
       if (error) throw error;
 
-      setAppointments(prev => prev.map(appointment => 
+      setAppointments(prev => prev.map(appointment =>
         appointment.id === id ? { ...appointment, status } : appointment
       ));
 
@@ -135,7 +117,7 @@ const AdminDashboard = () => {
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || { color: 'bg-gray-500', text: status };
-    
+
     return (
       <Badge className={`${config.color} text-white`}>
         {config.text}
@@ -157,7 +139,7 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-8 text-gray-800">Dashboard Admin - Vilo Assist Pro</h1>
-        
+
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
@@ -171,7 +153,6 @@ const AdminDashboard = () => {
               </div>
             </CardContent>
           </Card>
-          
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
@@ -183,7 +164,6 @@ const AdminDashboard = () => {
               </div>
             </CardContent>
           </Card>
-          
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
@@ -191,14 +171,13 @@ const AdminDashboard = () => {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">En attente</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {contacts.filter(c => c.status === 'nouveau').length + 
-                     appointments.filter(a => a.status === 'en_attente').length}
+                    {contacts.filter(c => c.status === 'nouveau').length +
+                      appointments.filter(a => a.status === 'en_attente').length}
                   </p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
@@ -206,8 +185,8 @@ const AdminDashboard = () => {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Traités</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {contacts.filter(c => c.status === 'traité').length + 
-                     appointments.filter(a => a.status === 'confirmé').length}
+                    {contacts.filter(c => c.status === 'traité').length +
+                      appointments.filter(a => a.status === 'confirmé').length}
                   </p>
                 </div>
               </div>
@@ -240,13 +219,13 @@ const AdminDashboard = () => {
                       </span>
                     </div>
                   </div>
-                  
+
                   <p className="text-gray-700 mb-4">{contact.message}</p>
-                  
+
                   <div className="flex space-x-2">
                     {contact.status === 'nouveau' && (
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         onClick={() => updateContactStatus(contact.id, 'traité')}
                         className="bg-yellow-500 hover:bg-yellow-600"
                       >
@@ -254,8 +233,8 @@ const AdminDashboard = () => {
                       </Button>
                     )}
                     {contact.status === 'traité' && (
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         onClick={() => updateContactStatus(contact.id, 'fermé')}
                         className="bg-green-500 hover:bg-green-600"
                       >
@@ -299,19 +278,19 @@ const AdminDashboard = () => {
                       </span>
                     </div>
                   </div>
-                  
+
                   <div className="flex space-x-2">
                     {appointment.status === 'en_attente' && (
                       <>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           onClick={() => updateAppointmentStatus(appointment.id, 'confirmé')}
                           className="bg-green-500 hover:bg-green-600"
                         >
                           Confirmer
                         </Button>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="destructive"
                           onClick={() => updateAppointmentStatus(appointment.id, 'annulé')}
                         >
@@ -320,8 +299,8 @@ const AdminDashboard = () => {
                       </>
                     )}
                     {appointment.status === 'confirmé' && (
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         onClick={() => updateAppointmentStatus(appointment.id, 'terminé')}
                         className="bg-gray-500 hover:bg-gray-600"
                       >
