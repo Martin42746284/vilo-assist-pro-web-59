@@ -10,7 +10,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Credentials admin simples (vous pouvez les changer)
+// Credentials admin simples 
 const ADMIN_EMAIL = "admin@viloassist.com";
 const ADMIN_PASSWORD = "admin123";
 
