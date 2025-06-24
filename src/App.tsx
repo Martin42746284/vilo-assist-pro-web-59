@@ -3,6 +3,7 @@ import { Routes, Route, BrowserRouter } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/hooks/useAuth';
 import { SupabaseAuthProvider, useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { useAuth } from '@/hooks/useAuth';
 import Index from '@/pages/Index';
 import Admin from '@/pages/Admin';
 import Welcome from '@/pages/Welcome';
@@ -12,6 +13,7 @@ import NotFound from '@/pages/NotFound';
 // Component to handle auth-based routing
 const AppContent = () => {
   const { user, isLoading } = useSupabaseAuth();
+  const { isAuthenticated } = useAuth();
 
   if (isLoading) {
     return (
@@ -24,10 +26,13 @@ const AppContent = () => {
   return (
     <div className="min-h-screen">
       <Routes>
-        {/* Public routes */}
-        <Route path="/admin" element={<Admin />} />
+        {/* Admin route - accessible if admin is authenticated */}
+        <Route 
+          path="/admin" 
+          element={isAuthenticated ? <Admin /> : <Welcome />} 
+        />
         
-        {/* Protected routes */}
+        {/* User routes */}
         {user ? (
           <>
             <Route path="/" element={<Index />} />

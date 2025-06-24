@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { 
   Shield, 
@@ -32,6 +33,7 @@ const Welcome = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { signIn, signUp } = useSupabaseAuth();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,18 +41,19 @@ const Welcome = () => {
 
     try {
       if (authMode === 'admin') {
-        // Admin login with hardcoded credentials
-        if (email === 'admin@viloassist.com' && password === 'admin123') {
+        // Admin login with hardcoded credentials - redirect directly to admin dashboard
+        const success = await login(email, password);
+        if (success) {
+          // La redirection est gérée dans App.tsx
           window.location.href = '/admin';
-          return;
         } else {
           toast({
             title: "Erreur de connexion",
             description: "Identifiants administrateur incorrects",
             variant: "destructive",
           });
-          return;
         }
+        return;
       }
 
       if (authMode === 'signup') {

@@ -1,118 +1,93 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
+import { User, Settings, Trash2, Search, UserPlus, Crown } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { 
-  Users, 
-  Search, 
-  Mail, 
-  Calendar, 
-  Shield, 
-  UserCheck,
-  Trash2,
-  Filter
-} from 'lucide-react';
 
-interface UserWithProfile {
+interface UserProfile {
   id: string;
   email: string;
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string | null;
+  phone: string | null;
   created_at: string;
-  email_confirmed_at: string | null;
-  profile: {
-    first_name: string | null;
-    last_name: string | null;
-    avatar_url: string | null;
-    phone: string | null;
-  } | null;
-  role: {
-    role: 'admin' | 'user';
-  } | null;
+  role?: 'admin' | 'user';
 }
 
 const UserManagement = () => {
-  const [users, setUsers] = useState<UserWithProfile[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<UserWithProfile[]>([]);
+  const [users, setUsers] = useState<UserProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState<string>('all');
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  useEffect(() => {
-    filterUsers();
-  }, [users, searchTerm, roleFilter]);
-
   const fetchUsers = async () => {
     try {
-      // Fetch users with their profiles and roles
-      const { data: profilesData, error: profilesError } = await supabase
+      setIsLoading(true);
+      
+      // Fetch profiles with user data
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select(`
-          *,
-          user_roles (role)
+          id,
+          first_name,
+          last_name,
+          avatar_url,
+          phone,
+          created_at
         `);
 
-      if (profilesError) throw profilesError;
-
-      // Get auth users (this requires admin privileges)
-      const { data: { users: authUsers }, error: usersError } = await supabase.auth.admin.listUsers();
-
-      if (usersError) {
-        console.error('Error fetching auth users:', usersError);
-        // If we can't fetch auth users, we'll work with profiles only
-        const mappedUsers = profilesData.map(profile => ({
-          id: profile.id,
-          email: 'Email non disponible',
-          created_at: profile.created_at,
-          email_confirmed_at: null,
-          profile: {
-            first_name: profile.first_name,
-            last_name: profile.last_name,
-            avatar_url: profile.avatar_url,
-            phone: profile.phone
-          },
-          role: profile.user_roles?.[0] || null
-        }));
-        setUsers(mappedUsers);
-      } else {
-        // Combine auth users with profiles
-        const combinedUsers = authUsers.map(authUser => {
-          const profile = profilesData.find(p => p.id === authUser.id);
-          return {
-            id: authUser.id,
-            email: authUser.email || '',
-            created_at: authUser.created_at,
-            email_confirmed_at: authUser.email_confirmed_at,
-            profile: profile ? {
-              first_name: profile.first_name,
-              last_name: profile.last_name,
-              avatar_url: profile.avatar_url,
-              phone: profile.phone
-            } : null,
-            role: profile?.user_roles?.[0] || null
-          };
-        });
-        setUsers(combinedUsers);
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        throw profilesError;
       }
-    } catch (error) {
+
+      // Fetch user roles separately
+      const { data: roles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+
+      if (rolesError) {
+        console.error('Error fetching roles:', rolesError);
+        // Don't throw here, roles are optional
+      }
+
+      // Get user emails from auth metadata (this might need admin privileges)
+      const usersWithDetails: UserProfile[] = [];
+      
+      for (const profile of profiles || []) {
+        // Try to get user email from auth.users (requires service role)
+        const { data: authUser } = await supabase.auth.admin.getUserById(profile.id);
+        
+        const userRole = roles?.find(r => r.user_id === profile.id)?.role || 'user';
+        
+        usersWithDetails.push({
+          id: profile.id,
+          email: authUser?.user?.email || 'Email non disponible',
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          avatar_url: profile.avatar_url,
+          phone: profile.phone,
+          created_at: profile.created_at,
+          role: userRole as 'admin' | 'user'
+        });
+      }
+
+      setUsers(usersWithDetails);
+    } catch (error: any) {
       console.error('Error fetching users:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de charger les utilisateurs",
+        description: "Impossible de charger les utilisateurs. Certaines fonctionnalités peuvent nécessiter des privilèges administrateur.",
         variant: "destructive",
       });
     } finally {
@@ -120,48 +95,42 @@ const UserManagement = () => {
     }
   };
 
-  const filterUsers = () => {
-    let filtered = users;
-
-    // Filter by search term
-    if (searchTerm) {
-      filtered = filtered.filter(user => 
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (user.profile?.first_name && user.profile.first_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (user.profile?.last_name && user.profile.last_name.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
-
-    // Filter by role
-    if (roleFilter !== 'all') {
-      filtered = filtered.filter(user => user.role?.role === roleFilter);
-    }
-
-    setFilteredUsers(filtered);
-  };
-
   const updateUserRole = async (userId: string, newRole: 'admin' | 'user') => {
     try {
-      const { error } = await supabase
+      // Check if user already has a role entry
+      const { data: existingRole } = await supabase
         .from('user_roles')
-        .upsert({
-          user_id: userId,
-          role: newRole
-        });
+        .select('id')
+        .eq('user_id', userId)
+        .single();
 
-      if (error) throw error;
+      if (existingRole) {
+        // Update existing role
+        const { error } = await supabase
+          .from('user_roles')
+          .update({ role: newRole })
+          .eq('user_id', userId);
 
-      setUsers(prev => prev.map(user => 
-        user.id === userId 
-          ? { ...user, role: { role: newRole } }
-          : user
+        if (error) throw error;
+      } else {
+        // Insert new role
+        const { error } = await supabase
+          .from('user_roles')
+          .insert({ user_id: userId, role: newRole });
+
+        if (error) throw error;
+      }
+
+      // Update local state
+      setUsers(prev => prev.map(user =>
+        user.id === userId ? { ...user, role: newRole } : user
       ));
 
       toast({
         title: "Rôle mis à jour",
         description: `L'utilisateur est maintenant ${newRole === 'admin' ? 'administrateur' : 'utilisateur'}`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating user role:', error);
       toast({
         title: "Erreur",
@@ -177,6 +146,7 @@ const UserManagement = () => {
     }
 
     try {
+      // Delete user (this will cascade to profiles and user_roles)
       const { error } = await supabase.auth.admin.deleteUser(userId);
 
       if (error) throw error;
@@ -187,7 +157,7 @@ const UserManagement = () => {
         title: "Utilisateur supprimé",
         description: "L'utilisateur a été supprimé avec succès",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting user:', error);
       toast({
         title: "Erreur",
@@ -197,26 +167,32 @@ const UserManagement = () => {
     }
   };
 
-  const getInitials = (user: UserWithProfile) => {
-    const first = user.profile?.first_name || '';
-    const last = user.profile?.last_name || '';
-    return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase() || user.email.charAt(0).toUpperCase();
+  const getInitials = (firstName: string | null, lastName: string | null) => {
+    const first = firstName || '';
+    const last = lastName || '';
+    return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase() || 'U';
   };
 
-  const getRoleBadge = (role: string | undefined) => {
-    if (role === 'admin') {
-      return <Badge className="bg-red-500 hover:bg-red-600 text-white">Admin</Badge>;
+  const getDisplayName = (firstName: string | null, lastName: string | null) => {
+    if (firstName && lastName) {
+      return `${firstName} ${lastName}`;
     }
-    return <Badge variant="secondary">Utilisateur</Badge>;
+    return 'Nom non renseigné';
   };
+
+  const filteredUsers = users.filter(user => {
+    const searchLower = searchTerm.toLowerCase();
+    const fullName = getDisplayName(user.first_name, user.last_name).toLowerCase();
+    const email = user.email.toLowerCase();
+    
+    return fullName.includes(searchLower) || email.includes(searchLower);
+  });
 
   if (isLoading) {
     return (
       <Card className="dark:bg-gray-800 dark:border-gray-700">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center h-32">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-vilo-purple-600"></div>
-          </div>
+        <CardContent className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-vilo-purple-600"></div>
         </CardContent>
       </Card>
     );
@@ -226,14 +202,14 @@ const UserManagement = () => {
     <Card className="dark:bg-gray-800 dark:border-gray-700">
       <CardHeader>
         <CardTitle className="flex items-center text-gray-800 dark:text-gray-100">
-          <Users className="w-5 h-5 mr-2" />
+          <User className="w-5 h-5 mr-2" />
           Gestion des Utilisateurs ({filteredUsers.length})
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Search and Filter */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
+        {/* Search */}
+        <div className="mb-6">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
               placeholder="Rechercher par nom ou email..."
@@ -242,17 +218,6 @@ const UserManagement = () => {
               className="pl-10 dark:bg-gray-700 dark:border-gray-600"
             />
           </div>
-          <Select value={roleFilter} onValueChange={setRoleFilter}>
-            <SelectTrigger className="w-48 dark:bg-gray-700 dark:border-gray-600">
-              <Filter className="w-4 h-4 mr-2" />
-              <SelectValue placeholder="Filtrer par rôle" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les rôles</SelectItem>
-              <SelectItem value="user">Utilisateurs</SelectItem>
-              <SelectItem value="admin">Administrateurs</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         {/* Users List */}
@@ -260,54 +225,50 @@ const UserManagement = () => {
           {filteredUsers.map((user) => (
             <div key={user.id} className="border dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-gray-700 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <Avatar className="w-12 h-12">
-                    <AvatarImage src={user.profile?.avatar_url || ''} />
+                <div className="flex items-center space-x-4 flex-1">
+                  <Avatar className="h-12 w-12">
+                    <AvatarImage src={user.avatar_url || ''} alt="Profile" />
                     <AvatarFallback className="bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 text-white">
-                      {getInitials(user)}
+                      {getInitials(user.first_name, user.last_name)}
                     </AvatarFallback>
                   </Avatar>
                   
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                      {user.profile?.first_name && user.profile?.last_name 
-                        ? `${user.profile.first_name} ${user.profile.last_name}`
-                        : 'Nom non renseigné'
-                      }
+                    <h3 className="font-semibold text-gray-800 dark:text-gray-100">
+                      {getDisplayName(user.first_name, user.last_name)}
                     </h3>
-                    <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
-                      <div className="flex items-center">
-                        <Mail className="w-4 h-4 mr-1" />
-                        {user.email}
-                      </div>
-                      <div className="flex items-center">
-                        <Calendar className="w-4 h-4 mr-1" />
-                        {new Date(user.created_at).toLocaleDateString('fr-FR')}
-                      </div>
-                      {user.email_confirmed_at && (
-                        <div className="flex items-center text-green-600 dark:text-green-400">
-                          <UserCheck className="w-4 h-4 mr-1" />
-                          Vérifié
-                        </div>
-                      )}
-                    </div>
-                    {user.profile?.phone && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        📞 {user.profile.phone}
-                      </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">{user.email}</p>
+                    {user.phone && (
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{user.phone}</p>
                     )}
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
+                      Membre depuis: {new Date(user.created_at).toLocaleDateString('fr-FR')}
+                    </p>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-3">
-                  {getRoleBadge(user.role?.role)}
-                  
+                  {/* Role Badge */}
+                  <Badge className={user.role === 'admin' ? 'bg-purple-500 hover:bg-purple-600' : 'bg-blue-500 hover:bg-blue-600'}>
+                    {user.role === 'admin' ? (
+                      <>
+                        <Crown className="w-3 h-3 mr-1" />
+                        Admin
+                      </>
+                    ) : (
+                      <>
+                        <User className="w-3 h-3 mr-1" />
+                        Utilisateur
+                      </>
+                    )}
+                  </Badge>
+
+                  {/* Role Selector */}
                   <Select
-                    value={user.role?.role || 'user'}
-                    onValueChange={(value) => updateUserRole(user.id, value as 'admin' | 'user')}
+                    value={user.role}
+                    onValueChange={(value: 'admin' | 'user') => updateUserRole(user.id, value)}
                   >
                     <SelectTrigger className="w-32">
-                      <Shield className="w-4 h-4 mr-2" />
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -316,11 +277,12 @@ const UserManagement = () => {
                     </SelectContent>
                   </Select>
 
+                  {/* Actions */}
                   <Button
-                    variant="destructive"
                     size="sm"
+                    variant="destructive"
                     onClick={() => deleteUser(user.id)}
-                    className="w-10 h-10 p-0"
+                    className="h-8 w-8 p-0"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>

@@ -31,14 +31,15 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch user profile and role
+          // Fetch user profile and role with a slight delay to avoid deadlock
           setTimeout(async () => {
             await fetchUserData(session.user.id);
-          }, 0);
+          }, 100);
         } else {
           setProfile(null);
           setUserRole(null);
@@ -49,16 +50,27 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
     );
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserData(session.user.id);
-      } else {
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error getting session:', error);
+        }
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await fetchUserData(session.user.id);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
         setIsLoading(false);
       }
-    });
+    };
+
+    initializeAuth();
 
     return () => subscription.unsubscribe();
   }, []);
@@ -74,6 +86,8 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (!profileError && profileData) {
         setProfile(profileData);
+      } else if (profileError) {
+        console.error('Error fetching profile:', profileError);
       }
 
       // Fetch user role
@@ -85,6 +99,10 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (!roleError && roleData) {
         setUserRole(roleData);
+      } else if (roleError) {
+        console.error('Error fetching role:', roleError);
+        // Set default role if none exists
+        setUserRole({ id: '', user_id: userId, role: 'user', created_at: new Date().toISOString() });
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -120,6 +138,8 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setProfile(null);
+    setUserRole(null);
   };
 
   const updateProfile = async (data: Partial<Profile>) => {
