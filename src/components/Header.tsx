@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Settings } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 
 const Header = () => {
@@ -12,6 +12,11 @@ const Header = () => {
       element.scrollIntoView({ behavior: 'smooth' });
       setIsMenuOpen(false);
     }
+  };
+
+  const navigateToAdmin = () => {
+    window.open('/admin', '_blank');
+    setIsMenuOpen(false);
   };
 
   return (
@@ -96,6 +101,14 @@ const Header = () => {
             >
               Contact
             </button>
+            <button 
+              onClick={navigateToAdmin}
+              className="text-gray-700 dark:text-gray-300 hover:text-vilo-purple-600 dark:hover:text-vilo-purple-400 transition-colors duration-300 flex items-center"
+              title="Dashboard Admin"
+            >
+              <Settings className="w-4 h-4 mr-1" />
+              Admin
+            </button>
             <ThemeToggle />
           </nav>
 
@@ -144,6 +157,13 @@ const Header = () => {
               className="block w-full text-left py-2 px-4 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-300"
             >
               Contact
+            </button>
+            <button 
+              onClick={navigateToAdmin}
+              className="block w-full text-left py-2 px-4 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-300 flex items-center"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Dashboard Admin
             </button>
           </div>
         )}
