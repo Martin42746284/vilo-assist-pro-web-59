@@ -3,9 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { Contact, Appointment } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
+import UserManagement from './UserManagement';
 import { 
   Calendar, 
   Mail, 
@@ -19,7 +21,8 @@ import {
   Filter,
   RefreshCw,
   LogOut,
-  Shield
+  Shield,
+  Users
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -31,6 +34,7 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState('contacts');
 
   useEffect(() => {
     fetchData();
@@ -128,7 +132,6 @@ const AdminDashboard = () => {
         contact.id === id ? { ...contact, status } : contact
       ));
 
-      // Send email confirmation if status is 'traité'
       if (status === 'traité') {
         const contact = contacts.find(c => c.id === id);
         if (contact) {
@@ -166,7 +169,6 @@ const AdminDashboard = () => {
         appointment.id === id ? { ...appointment, status } : appointment
       ));
 
-      // Send email confirmation if status is 'confirmé'
       if (status === 'confirmé') {
         const appointment = appointments.find(a => a.id === id);
         if (appointment) {
@@ -241,7 +243,7 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8 transition-colors">
       <div className="max-w-7xl mx-auto">
-        {/* Header amélioré */}
+        {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 rounded-xl flex items-center justify-center">
@@ -252,7 +254,7 @@ const AdminDashboard = () => {
                 Dashboard Admin
               </h1>
               <p className="text-gray-600 dark:text-gray-400 mt-1">
-                Gérez vos contacts et rendez-vous en temps réel - Vilo Assist Pro
+                Gérez vos contacts, rendez-vous et utilisateurs - Vilo Assist Pro
               </p>
             </div>
           </div>
@@ -277,263 +279,238 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Search and Filter */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Rechercher par nom, email ou service..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 dark:bg-gray-800 dark:border-gray-700"
-            />
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant={statusFilter === 'all' ? 'default' : 'outline'}
-              onClick={() => setStatusFilter('all')}
-              className="whitespace-nowrap"
-            >
-              <Filter className="w-4 h-4 mr-2" />
-              Tous
-            </Button>
-            <Button
-              variant={statusFilter === 'nouveau' || statusFilter === 'en_attente' ? 'default' : 'outline'}
-              onClick={() => setStatusFilter(statusFilter === 'nouveau' ? 'en_attente' : 'nouveau')}
-              className="whitespace-nowrap"
-            >
-              En attente
-            </Button>
-            <Button
-              variant={statusFilter === 'traité' || statusFilter === 'confirmé' ? 'default' : 'outline'}
-              onClick={() => setStatusFilter(statusFilter === 'traité' ? 'confirmé' : 'traité')}
-              className="whitespace-nowrap"
-            >
-              Traités
-            </Button>
-          </div>
-        </div>
+        {/* Tabs Navigation */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 dark:bg-gray-800">
+            <TabsTrigger value="contacts" className="flex items-center space-x-2">
+              <Mail className="w-4 h-4" />
+              <span>Contacts</span>
+            </TabsTrigger>
+            <TabsTrigger value="appointments" className="flex items-center space-x-2">
+              <Calendar className="w-4 h-4" />
+              <span>Rendez-vous</span>
+            </TabsTrigger>
+            <TabsTrigger value="users" className="flex items-center space-x-2">
+              <Users className="w-4 h-4" />
+              <span>Utilisateurs</span>
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Mail className="h-8 w-8" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium opacity-90">Total Contacts</p>
-                  <p className="text-2xl font-bold">{contacts.length}</p>
-                </div>
+          {/* Search and Filter - Only for contacts and appointments */}
+          {activeTab !== 'users' && (
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Rechercher par nom, email ou service..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 dark:bg-gray-800 dark:border-gray-700"
+                />
               </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Calendar className="h-8 w-8" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium opacity-90">Rendez-vous</p>
-                  <p className="text-2xl font-bold">{appointments.length}</p>
-                </div>
+              <div className="flex gap-2">
+                <Button
+                  variant={statusFilter === 'all' ? 'default' : 'outline'}
+                  onClick={() => setStatusFilter('all')}
+                  className="whitespace-nowrap"
+                >
+                  <Filter className="w-4 h-4 mr-2" />
+                  Tous
+                </Button>
+                <Button
+                  variant={statusFilter === 'nouveau' || statusFilter === 'en_attente' ? 'default' : 'outline'}
+                  onClick={() => setStatusFilter(activeTab === 'contacts' ? 'nouveau' : 'en_attente')}
+                  className="whitespace-nowrap"
+                >
+                  En attente
+                </Button>
+                <Button
+                  variant={statusFilter === 'traité' || statusFilter === 'confirmé' ? 'default' : 'outline'}
+                  onClick={() => setStatusFilter(activeTab === 'contacts' ? 'traité' : 'confirmé')}
+                  className="whitespace-nowrap"
+                >
+                  Traités
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Clock className="h-8 w-8" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium opacity-90">En attente</p>
-                  <p className="text-2xl font-bold">
-                    {contacts.filter(c => c.status === 'nouveau').length +
-                      appointments.filter(a => a.status === 'en_attente').length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <CheckCircle className="h-8 w-8" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium opacity-90">Traités</p>
-                  <p className="text-2xl font-bold">
-                    {contacts.filter(c => c.status === 'traité').length +
-                      appointments.filter(a => a.status === 'confirmé').length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Contacts */}
-        <Card className="mb-8 dark:bg-gray-800 dark:border-gray-700">
-          <CardHeader>
-            <CardTitle className="flex items-center text-gray-800 dark:text-gray-100">
-              <Mail className="w-5 h-5 mr-2" />
-              Demandes de Contact ({filteredContacts.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {filteredContacts.map((contact) => (
-                <div key={contact.id} className="border dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-gray-700 hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg text-gray-800 dark:text-gray-100">{contact.name}</h3>
-                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 mt-1">
-                        <Mail className="w-4 h-4" />
-                        <span>{contact.email}</span>
-                      </div>
-                      <p className="text-sm text-blue-600 dark:text-blue-400 font-medium mt-1">{contact.service}</p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {getStatusBadge(contact.status)}
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {new Date(contact.created_at).toLocaleDateString('fr-FR')}
-                      </span>
-                    </div>
-                  </div>
-
-                  <p className="text-gray-700 dark:text-gray-300 mb-4 bg-gray-50 dark:bg-gray-600 p-3 rounded">
-                    {contact.message}
-                  </p>
-
-                  <div className="flex flex-wrap gap-2">
-                    {contact.status === 'nouveau' && (
-                      <Button
-                        size="sm"
-                        onClick={() => updateContactStatus(contact.id, 'traité')}
-                        className="bg-yellow-500 hover:bg-yellow-600 text-white"
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        Marquer comme traité
-                      </Button>
-                    )}
-                    {contact.status === 'traité' && (
-                      <Button
-                        size="sm"
-                        onClick={() => updateContactStatus(contact.id, 'fermé')}
-                        className="bg-green-500 hover:bg-green-600 text-white"
-                      >
-                        <CheckCircle className="w-4 h-4 mr-1" />
-                        Fermer
-                      </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => sendEmailConfirmation(contact.email, contact.name, 'contact', {
-                        service: contact.service,
-                        message: contact.message
-                      })}
-                      className="border-vilo-purple-300 text-vilo-purple-600 hover:bg-vilo-purple-50 dark:border-vilo-purple-400 dark:text-vilo-purple-400"
-                    >
-                      <Send className="w-4 h-4 mr-1" />
-                      Envoyer email
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              {filteredContacts.length === 0 && (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  Aucun contact trouvé
-                </div>
-              )}
             </div>
-          </CardContent>
-        </Card>
+          )}
 
-        {/* Appointments */}
-        <Card className="dark:bg-gray-800 dark:border-gray-700">
-          <CardHeader>
-            <CardTitle className="flex items-center text-gray-800 dark:text-gray-100">
-              <Calendar className="w-5 h-5 mr-2" />
-              Rendez-vous ({filteredAppointments.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {filteredAppointments.map((appointment) => (
-                <div key={appointment.id} className="border dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-gray-700 hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg flex items-center text-gray-800 dark:text-gray-100">
-                        <User className="w-4 h-4 mr-2" />
-                        {appointment.client_name}
-                      </h3>
-                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 mt-1">
-                        <Mail className="w-4 h-4" />
-                        <span>{appointment.client_email}</span>
+          {/* Contacts Tab */}
+          <TabsContent value="contacts">
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
+              <CardHeader>
+                <CardTitle className="flex items-center text-gray-800 dark:text-gray-100">
+                  <Mail className="w-5 h-5 mr-2" />
+                  Demandes de Contact ({filteredContacts.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {filteredContacts.map((contact) => (
+                    <div key={contact.id} className="border dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-gray-700 hover:shadow-md transition-shadow">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg text-gray-800 dark:text-gray-100">{contact.name}</h3>
+                          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 mt-1">
+                            <Mail className="w-4 h-4" />
+                            <span>{contact.email}</span>
+                          </div>
+                          <p className="text-sm text-blue-600 dark:text-blue-400 font-medium mt-1">{contact.service}</p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {getStatusBadge(contact.status)}
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {new Date(contact.created_at).toLocaleDateString('fr-FR')}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-medium mt-1">
-                        <Calendar className="w-4 h-4" />
-                        <span>{new Date(appointment.date).toLocaleDateString('fr-FR')} à {appointment.time}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {getStatusBadge(appointment.status)}
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {new Date(appointment.created_at).toLocaleDateString('fr-FR')}
-                      </span>
-                    </div>
-                  </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    {appointment.status === 'en_attente' && (
-                      <>
+                      <p className="text-gray-700 dark:text-gray-300 mb-4 bg-gray-50 dark:bg-gray-600 p-3 rounded">
+                        {contact.message}
+                      </p>
+
+                      <div className="flex flex-wrap gap-2">
+                        {contact.status === 'nouveau' && (
+                          <Button
+                            size="sm"
+                            onClick={() => updateContactStatus(contact.id, 'traité')}
+                            className="bg-yellow-500 hover:bg-yellow-600 text-white"
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            Marquer comme traité
+                          </Button>
+                        )}
+                        {contact.status === 'traité' && (
+                          <Button
+                            size="sm"
+                            onClick={() => updateContactStatus(contact.id, 'fermé')}
+                            className="bg-green-500 hover:bg-green-600 text-white"
+                          >
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Fermer
+                          </Button>
+                        )}
                         <Button
                           size="sm"
-                          onClick={() => updateAppointmentStatus(appointment.id, 'confirmé')}
-                          className="bg-green-500 hover:bg-green-600 text-white"
+                          variant="outline"
+                          onClick={() => sendEmailConfirmation(contact.email, contact.name, 'contact', {
+                            service: contact.service,
+                            message: contact.message
+                          })}
+                          className="border-vilo-purple-300 text-vilo-purple-600 hover:bg-vilo-purple-50 dark:border-vilo-purple-400 dark:text-vilo-purple-400"
                         >
-                          <CheckCircle className="w-4 h-4 mr-1" />
-                          Confirmer
+                          <Send className="w-4 h-4 mr-1" />
+                          Envoyer email
                         </Button>
+                      </div>
+                    </div>
+                  ))}
+                  {filteredContacts.length === 0 && (
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      Aucun contact trouvé
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Appointments Tab */}
+          <TabsContent value="appointments">
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
+              <CardHeader>
+                <CardTitle className="flex items-center text-gray-800 dark:text-gray-100">
+                  <Calendar className="w-5 h-5 mr-2" />
+                  Rendez-vous ({filteredAppointments.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {filteredAppointments.map((appointment) => (
+                    <div key={appointment.id} className="border dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-gray-700 hover:shadow-md transition-shadow">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg flex items-center text-gray-800 dark:text-gray-100">
+                            <User className="w-4 h-4 mr-2" />
+                            {appointment.client_name}
+                          </h3>
+                          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 mt-1">
+                            <Mail className="w-4 h-4" />
+                            <span>{appointment.client_email}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-medium mt-1">
+                            <Calendar className="w-4 h-4" />
+                            <span>{new Date(appointment.date).toLocaleDateString('fr-FR')} à {appointment.time}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {getStatusBadge(appointment.status)}
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {new Date(appointment.created_at).toLocaleDateString('fr-FR')}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        {appointment.status === 'en_attente' && (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={() => updateAppointmentStatus(appointment.id, 'confirmé')}
+                              className="bg-green-500 hover:bg-green-600 text-white"
+                            >
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              Confirmer
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => updateAppointmentStatus(appointment.id, 'annulé')}
+                            >
+                              Annuler
+                            </Button>
+                          </>
+                        )}
+                        {appointment.status === 'confirmé' && (
+                          <Button
+                            size="sm"
+                            onClick={() => updateAppointmentStatus(appointment.id, 'terminé')}
+                            className="bg-gray-500 hover:bg-gray-600 text-white"
+                          >
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Marquer comme terminé
+                          </Button>
+                        )}
                         <Button
                           size="sm"
-                          variant="destructive"
-                          onClick={() => updateAppointmentStatus(appointment.id, 'annulé')}
+                          variant="outline"
+                          onClick={() => sendEmailConfirmation(appointment.client_email, appointment.client_name, 'appointment', {
+                            date: new Date(appointment.date).toLocaleDateString('fr-FR'),
+                            time: appointment.time
+                          })}
+                          className="border-vilo-purple-300 text-vilo-purple-600 hover:bg-vilo-purple-50 dark:border-vilo-purple-400 dark:text-vilo-purple-400"
                         >
-                          Annuler
+                          <Send className="w-4 h-4 mr-1" />
+                          Envoyer email
                         </Button>
-                      </>
-                    )}
-                    {appointment.status === 'confirmé' && (
-                      <Button
-                        size="sm"
-                        onClick={() => updateAppointmentStatus(appointment.id, 'terminé')}
-                        className="bg-gray-500 hover:bg-gray-600 text-white"
-                      >
-                        <CheckCircle className="w-4 h-4 mr-1" />
-                        Marquer comme terminé
-                      </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => sendEmailConfirmation(appointment.client_email, appointment.client_name, 'appointment', {
-                        date: new Date(appointment.date).toLocaleDateString('fr-FR'),
-                        time: appointment.time
-                      })}
-                      className="border-vilo-purple-300 text-vilo-purple-600 hover:bg-vilo-purple-50 dark:border-vilo-purple-400 dark:text-vilo-purple-400"
-                    >
-                      <Send className="w-4 h-4 mr-1" />
-                      Envoyer email
-                    </Button>
-                  </div>
+                      </div>
+                    </div>
+                  ))}
+                  {filteredAppointments.length === 0 && (
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      Aucun rendez-vous trouvé
+                    </div>
+                  )}
                 </div>
-              ))}
-              {filteredAppointments.length === 0 && (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  Aucun rendez-vous trouvé
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Users Management Tab */}
+          <TabsContent value="users">
+            <UserManagement />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

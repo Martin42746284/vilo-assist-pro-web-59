@@ -1,161 +1,152 @@
 
-import { useState } from 'react';
-import { Menu, X, Settings, LogOut } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Menu, X, Shield, Sparkles } from 'lucide-react';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import ThemeToggle from './ThemeToggle';
-import { useAuth } from '@/hooks/useAuth';
+import UserMenu from './UserMenu';
+import { Link } from 'react-router-dom';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isAuthenticated, logout } = useAuth();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const { user, isAdmin } = useSupabaseAuth();
 
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-      setIsMenuOpen(false);
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const navItems = [
+    { name: 'Accueil', href: '#hero' },
+    { name: 'À propos', href: '#about' },
+    { name: 'Services', href: '#services' },
+    { name: 'Processus', href: '#process' },
+    { name: 'Portfolio', href: '#portfolio' },
+    { name: 'Tarifs', href: '#pricing' },
+    { name: 'Témoignages', href: '#testimonials' },
+    { name: 'Contact', href: '#contact' },
+  ];
+
+  const handleNavClick = (href: string) => {
+    if (href.startsWith('#')) {
+      const element = document.querySelector(href);
+      if (element) {
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }
     }
-  };
-
-  const navigateToAdmin = () => {
-    window.open('/admin', '_blank');
-    setIsMenuOpen(false);
-  };
-
-  const handleLogout = () => {
-    logout();
     setIsMenuOpen(false);
   };
 
   return (
-    <header className="fixed top-0 w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 z-40 transition-colors duration-300 shadow-sm">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo amélioré */}
-          <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => scrollToSection('hero')}>
-            <div className="w-10 h-10 bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
-              <span className="text-white font-bold text-lg">VA</span>
+    <header 
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled 
+          ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-lg border-b border-gray-200 dark:border-gray-800' 
+          : 'bg-transparent'
+      }`}
+    >
+      <div className="container mx-auto px-4 lg:px-6">
+        <div className="flex items-center justify-between h-16 lg:h-18">
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="relative">
+              <div className="w-10 h-10 bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 rounded-xl flex items-center justify-center transform transition-transform group-hover:scale-105">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <div className="absolute -inset-1 bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-xl font-bold bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 bg-clip-text text-transparent">
+            <div className="hidden sm:block">
+              <h1 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 bg-clip-text text-transparent">
                 VILO ASSIST-PRO
-              </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400 -mt-1">
-                Assistant Virtuel Professionnel
-              </span>
+              </h1>
+              <p className="text-xs text-gray-600 dark:text-gray-400 -mt-1">
+                Assistance Virtuelle Professionnelle
+              </p>
             </div>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-1">
-            {[
-              { id: 'accueil', label: 'Accueil' },
-              { id: 'about', label: 'À propos' },
-              { id: 'services', label: 'Services' },
-              { id: 'process', label: 'Processus' },
-              { id: 'portfolio', label: 'Portfolio' },
-              { id: 'calculator', label: 'Devis' },
-              { id: 'tarifs', label: 'Tarifs' },
-              { id: 'testimonials', label: 'Témoignages' },
-              { id: 'appointment', label: 'RDV' },
-              { id: 'faq', label: 'FAQ' },
-              { id: 'contact', label: 'Contact' }
-            ].map((item) => (
-              <Button
-                key={item.id}
-                variant="ghost"
-                onClick={() => scrollToSection(item.id)}
-                className="text-gray-700 dark:text-gray-300 hover:text-vilo-purple-600 dark:hover:text-vilo-purple-400 hover:bg-vilo-purple-50 dark:hover:bg-vilo-purple-900/20 transition-all duration-300 px-3 py-2 rounded-lg text-sm font-medium"
+            {navItems.map((item) => (
+              <button
+                key={item.name}
+                onClick={() => handleNavClick(item.href)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-vilo-purple-600 dark:hover:text-vilo-purple-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-200 relative group"
               >
-                {item.label}
-              </Button>
+                {item.name}
+                <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
+              </button>
             ))}
           </nav>
 
-          {/* Actions */}
-          <div className="flex items-center space-x-3">
-            {/* Theme Toggle - visible sur toutes les tailles */}
-            <ThemeToggle />
-            
-            {/* Admin Button */}
-            <Button
-              onClick={navigateToAdmin}
-              variant="outline"
-              className="hidden md:flex items-center space-x-2 border-vilo-purple-200 dark:border-vilo-purple-700 text-vilo-purple-600 dark:text-vilo-purple-400 hover:bg-vilo-purple-50 dark:hover:bg-vilo-purple-900/20 transition-all duration-300"
-            >
-              <Settings className="w-4 h-4" />
-              <span>Admin</span>
-            </Button>
-
-            {/* Logout Button (si authentifié) */}
-            {isAuthenticated && (
-              <Button
-                onClick={handleLogout}
-                variant="outline"
-                className="hidden md:flex items-center space-x-2 border-red-200 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-300"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Déconnexion</span>
-              </Button>
+          {/* Desktop Actions */}
+          <div className="hidden lg:flex items-center space-x-3">
+            {/* Admin Access */}
+            {isAdmin && (
+              <Link to="/admin">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-vilo-purple-300 dark:border-vilo-purple-400 text-vilo-purple-600 dark:text-vilo-purple-400 hover:bg-vilo-purple-50 dark:hover:bg-vilo-purple-900/20"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Admin
+                </Button>
+              </Link>
             )}
 
-            {/* Mobile menu button */}
-            <Button
-              variant="ghost"
-              size="sm"
+            <ThemeToggle />
+            
+            {user && <UserMenu />}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <div className="flex items-center space-x-3 lg:hidden">
+            <ThemeToggle />
+            {user && <UserMenu />}
+            <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden text-gray-700 dark:text-gray-300 hover:text-vilo-purple-600 dark:hover:text-vilo-purple-400 p-2"
-              aria-label="Menu de navigation"
+              className="p-2 text-gray-700 dark:text-gray-300 hover:text-vilo-purple-600 dark:hover:text-vilo-purple-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
             >
-              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </Button>
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </div>
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="lg:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 py-4 animate-fade-in shadow-lg">
-            <div className="space-y-2">
-              {[
-                { id: 'services', label: 'Services' },
-                { id: 'tarifs', label: 'Tarifs' },
-                { id: 'portfolio', label: 'Portfolio' },
-                { id: 'calculator', label: 'Devis' },
-                { id: 'faq', label: 'FAQ' },
-                { id: 'contact', label: 'Contact' }
-              ].map((item) => (
-                <Button
-                  key={item.id}
-                  variant="ghost"
-                  onClick={() => scrollToSection(item.id)}
-                  className="w-full justify-start text-gray-700 dark:text-gray-300 hover:text-vilo-purple-600 dark:hover:text-vilo-purple-400 hover:bg-vilo-purple-50 dark:hover:bg-vilo-purple-900/20 transition-all duration-300 px-4 py-3"
+          <div className="lg:hidden border-t border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md">
+            <nav className="py-4 space-y-2">
+              {navItems.map((item) => (
+                <button
+                  key={item.name}
+                  onClick={() => handleNavClick(item.href)}
+                  className="block w-full text-left px-4 py-3 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-vilo-purple-600 dark:hover:text-vilo-purple-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                 >
-                  {item.label}
-                </Button>
+                  {item.name}
+                </button>
               ))}
               
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
-                <Button
-                  onClick={navigateToAdmin}
-                  variant="ghost"
-                  className="w-full justify-start text-vilo-purple-600 dark:text-vilo-purple-400 hover:bg-vilo-purple-50 dark:hover:bg-vilo-purple-900/20 transition-all duration-300 px-4 py-3"
-                >
-                  <Settings className="w-4 h-4 mr-2" />
-                  Dashboard Admin
-                </Button>
-
-                {isAuthenticated && (
-                  <Button
-                    onClick={handleLogout}
-                    variant="ghost"
-                    className="w-full justify-start text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-300 px-4 py-3"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Déconnexion
-                  </Button>
-                )}
-              </div>
-            </div>
+              {/* Mobile Admin Access */}
+              {isAdmin && (
+                <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                  <Link to="/admin" onClick={() => setIsMenuOpen(false)}>
+                    <div className="flex items-center px-4 py-3 text-base font-medium text-vilo-purple-600 dark:text-vilo-purple-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                      <Shield className="w-5 h-5 mr-3" />
+                      Dashboard Admin
+                    </div>
+                  </Link>
+                </div>
+              )}
+            </nav>
           </div>
         )}
       </div>

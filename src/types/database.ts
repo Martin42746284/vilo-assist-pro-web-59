@@ -28,5 +28,23 @@ export interface Testimonial {
   created_at: string;
 }
 
+export interface Profile {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string | null;
+  phone: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserRole {
+  id: string;
+  user_id: string;
+  role: 'admin' | 'user';
+  created_at: string;
+}
+
 export type ContactFormData = Omit<Contact, 'id' | 'created_at' | 'status'>;
 export type AppointmentFormData = Omit<Appointment, 'id' | 'created_at' | 'status'>;
+export type ProfileFormData = Omit<Profile, 'id' | 'created_at' | 'updated_at'>;
