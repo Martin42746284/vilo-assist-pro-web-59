@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { Contact, Appointment } from '@/types/database';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   Calendar, 
   Mail, 
@@ -17,11 +17,14 @@ import {
   Send,
   Eye,
   Filter,
-  RefreshCw
+  RefreshCw,
+  LogOut,
+  Shield
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const AdminDashboard = () => {
+  const { logout } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -80,7 +83,9 @@ const AdminDashboard = () => {
 
   const sendEmailConfirmation = async (email: string, name: string, type: 'contact' | 'appointment', data?: any) => {
     try {
-      const { error } = await supabase.functions.invoke('send-notification-email', {
+      console.log('Envoi email à:', email, 'Type:', type);
+      
+      const { data: result, error } = await supabase.functions.invoke('send-notification-email', {
         body: {
           to: email,
           name: name,
@@ -89,17 +94,22 @@ const AdminDashboard = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur supabase function:', error);
+        throw error;
+      }
+
+      console.log('Résultat envoi email:', result);
 
       toast({
         title: "Email envoyé",
         description: `Email de confirmation envoyé à ${email}`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur envoi email:', error);
       toast({
         title: "Erreur email",
-        description: "Impossible d'envoyer l'email de confirmation",
+        description: `Impossible d'envoyer l'email: ${error.message || 'Erreur inconnue'}`,
         variant: "destructive",
       });
     }
@@ -231,24 +241,40 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8 transition-colors">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        {/* Header amélioré */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">
-              Dashboard Admin - Vilo Assist Pro
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
-              Gérez vos contacts et rendez-vous en temps réel
-            </p>
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 rounded-xl flex items-center justify-center">
+              <Shield className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">
+                Dashboard Admin
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                Gérez vos contacts et rendez-vous en temps réel - Vilo Assist Pro
+              </p>
+            </div>
           </div>
-          <Button 
-            onClick={refreshData} 
-            disabled={isRefreshing}
-            className="bg-vilo-purple-600 hover:bg-vilo-purple-700 text-white"
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Actualiser
-          </Button>
+          <div className="flex items-center space-x-3">
+            <Button 
+              onClick={refreshData} 
+              disabled={isRefreshing}
+              variant="outline"
+              className="border-vilo-purple-200 dark:border-vilo-purple-700 text-vilo-purple-600 dark:text-vilo-purple-400"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Actualiser
+            </Button>
+            <Button 
+              onClick={logout}
+              variant="outline"
+              className="border-red-200 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Déconnexion
+            </Button>
+          </div>
         </div>
 
         {/* Search and Filter */}
