@@ -20,7 +20,7 @@ import AppointmentCalendar from '@/components/AppointmentCalendar';
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300 dark:bg-gray-900 dark:text-gray-100">
       <ScrollProgress />
       <Header />
       <section id="hero">

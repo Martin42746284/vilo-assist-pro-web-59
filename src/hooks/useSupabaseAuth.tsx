@@ -88,6 +88,24 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
         setProfile(profileData);
       } else if (profileError) {
         console.error('Error fetching profile:', profileError);
+        // Create profile if it doesn't exist
+        if (profileError.code === 'PGRST116') {
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              id: userId,
+              first_name: '',
+              last_name: '',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+          if (!createError && newProfile) {
+            setProfile(newProfile);
+          }
+        }
       }
 
       // Fetch user role
@@ -145,19 +163,27 @@ export const SupabaseAuthProvider = ({ children }: { children: ReactNode }) => {
   const updateProfile = async (data: Partial<Profile>) => {
     if (!user) return { error: new Error('No user logged in') };
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        ...data,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', user.id);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          ...data,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
 
-    if (!error) {
+      if (error) {
+        console.error('Error updating profile:', error);
+        return { error };
+      }
+
+      // Refresh user data after successful update
       await fetchUserData(user.id);
+      return { error: null };
+    } catch (error) {
+      console.error('Error in updateProfile:', error);
+      return { error };
     }
-
-    return { error };
   };
 
   const updatePassword = async (newPassword: string) => {

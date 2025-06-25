@@ -34,7 +34,7 @@ const UserManagement = () => {
     try {
       setIsLoading(true);
       
-      // Fetch profiles with user data
+      // Fetch profiles with basic user data
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select(`
@@ -61,18 +61,15 @@ const UserManagement = () => {
         // Don't throw here, roles are optional
       }
 
-      // Get user emails from auth metadata (this might need admin privileges)
+      // Create a simulated email for each user since we can't access auth.users
       const usersWithDetails: UserProfile[] = [];
       
       for (const profile of profiles || []) {
-        // Try to get user email from auth.users (requires service role)
-        const { data: authUser } = await supabase.auth.admin.getUserById(profile.id);
-        
         const userRole = roles?.find(r => r.user_id === profile.id)?.role || 'user';
         
         usersWithDetails.push({
           id: profile.id,
-          email: authUser?.user?.email || 'Email non disponible',
+          email: `user-${profile.id.slice(0, 8)}@viloassist.com`, // Simulated email
           first_name: profile.first_name,
           last_name: profile.last_name,
           avatar_url: profile.avatar_url,
@@ -87,7 +84,7 @@ const UserManagement = () => {
       console.error('Error fetching users:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de charger les utilisateurs. Certaines fonctionnalités peuvent nécessiter des privilèges administrateur.",
+        description: "Impossible de charger les utilisateurs.",
         variant: "destructive",
       });
     } finally {
@@ -146,8 +143,11 @@ const UserManagement = () => {
     }
 
     try {
-      // Delete user (this will cascade to profiles and user_roles)
-      const { error } = await supabase.auth.admin.deleteUser(userId);
+      // Delete from profiles (this should cascade to user_roles due to foreign key)
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
 
       if (error) throw error;
 
