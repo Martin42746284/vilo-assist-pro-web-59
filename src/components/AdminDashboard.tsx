@@ -87,7 +87,7 @@ const AdminDashboard = () => {
 
   const sendEmailConfirmation = async (email: string, name: string, type: 'contact' | 'appointment', data?: any) => {
     try {
-      console.log('Envoi email à:', email, 'Type:', type);
+      console.log('Envoi email à:', email, 'Type:', type, 'Data:', data);
       
       const { data: result, error } = await supabase.functions.invoke('send-notification-email', {
         body: {
@@ -100,6 +100,15 @@ const AdminDashboard = () => {
 
       if (error) {
         console.error('Erreur supabase function:', error);
+        // Check if it's a function not found error
+        if (error.message?.includes('Function not found') || error.message?.includes('404')) {
+          toast({
+            title: "Fonction email non configurée",
+            description: "La fonction d'envoi d'email n'est pas encore configurée. Veuillez configurer l'API Resend.",
+            variant: "destructive",
+          });
+          return;
+        }
         throw error;
       }
 
@@ -111,11 +120,27 @@ const AdminDashboard = () => {
       });
     } catch (error: any) {
       console.error('Erreur envoi email:', error);
-      toast({
-        title: "Erreur email",
-        description: `Impossible d'envoyer l'email: ${error.message || 'Erreur inconnue'}`,
-        variant: "destructive",
-      });
+      
+      // More specific error handling
+      if (error.message?.includes('RESEND_API_KEY')) {
+        toast({
+          title: "Configuration requise",
+          description: "La clé API Resend doit être configurée dans les secrets Supabase.",
+          variant: "destructive",
+        });
+      } else if (error.message?.includes('Network')) {
+        toast({
+          title: "Erreur réseau",
+          description: "Impossible de se connecter au service d'email. Vérifiez votre connexion.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erreur email",
+          description: `Impossible d'envoyer l'email: ${error.message || 'Erreur inconnue'}`,
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -240,6 +265,91 @@ const AdminDashboard = () => {
     );
   }
 
+  // Dans la section des contacts, améliorons les boutons d'email
+  const renderContactActions = (contact: any) => (
+    <div className="flex flex-wrap gap-2">
+      {contact.status === 'nouveau' && (
+        <Button
+          size="sm"
+          onClick={() => updateContactStatus(contact.id, 'traité')}
+          className="bg-yellow-500 hover:bg-yellow-600 text-white"
+        >
+          <Eye className="w-4 h-4 mr-1" />
+          Marquer comme traité
+        </Button>
+      )}
+      {contact.status === 'traité' && (
+        <Button
+          size="sm"
+          onClick={() => updateContactStatus(contact.id, 'fermé')}
+          className="bg-green-500 hover:bg-green-600 text-white"
+        >
+          <CheckCircle className="w-4 h-4 mr-1" />
+          Fermer
+        </Button>
+      )}
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() => sendEmailConfirmation(contact.email, contact.name, 'contact', {
+          service: contact.service,
+          message: contact.message
+        })}
+        className="border-vilo-purple-300 text-vilo-purple-600 hover:bg-vilo-purple-50 dark:border-vilo-purple-400 dark:text-vilo-purple-400 dark:hover:bg-vilo-purple-900/20"
+      >
+        <Send className="w-4 h-4 mr-1" />
+        Envoyer email
+      </Button>
+    </div>
+  );
+
+  // Dans la section des rendez-vous, améliorons les boutons d'email
+  const renderAppointmentActions = (appointment: any) => (
+    <div className="flex flex-wrap gap-2">
+      {appointment.status === 'en_attente' && (
+        <>
+          <Button
+            size="sm"
+            onClick={() => updateAppointmentStatus(appointment.id, 'confirmé')}
+            className="bg-green-500 hover:bg-green-600 text-white"
+          >
+            <CheckCircle className="w-4 h-4 mr-1" />
+            Confirmer
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => updateAppointmentStatus(appointment.id, 'annulé')}
+          >
+            Annuler
+          </Button>
+        </>
+      )}
+      {appointment.status === 'confirmé' && (
+        <Button
+          size="sm"
+          onClick={() => updateAppointmentStatus(appointment.id, 'terminé')}
+          className="bg-gray-500 hover:bg-gray-600 text-white"
+        >
+          <CheckCircle className="w-4 h-4 mr-1" />
+          Marquer comme terminé
+        </Button>
+      )}
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() => sendEmailConfirmation(appointment.client_email, appointment.client_name, 'appointment', {
+          date: new Date(appointment.date).toLocaleDateString('fr-FR'),
+          time: appointment.time
+        })}
+        className="border-vilo-purple-300 text-vilo-purple-600 hover:bg-vilo-purple-50 dark:border-vilo-purple-400 dark:text-vilo-purple-400 dark:hover:bg-vilo-purple-900/20"
+      >
+        <Send className="w-4 h-4 mr-1" />
+        Envoyer email
+      </Button>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8 transition-colors">
       <div className="max-w-7xl mx-auto">
@@ -282,15 +392,15 @@ const AdminDashboard = () => {
         {/* Tabs Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 dark:bg-gray-800">
-            <TabsTrigger value="contacts" className="flex items-center space-x-2">
+            <TabsTrigger value="contacts" className="flex items-center space-x-2 dark:data-[state=active]:bg-gray-700">
               <Mail className="w-4 h-4" />
               <span>Contacts</span>
             </TabsTrigger>
-            <TabsTrigger value="appointments" className="flex items-center space-x-2">
+            <TabsTrigger value="appointments" className="flex items-center space-x-2 dark:data-[state=active]:bg-gray-700">
               <Calendar className="w-4 h-4" />
               <span>Rendez-vous</span>
             </TabsTrigger>
-            <TabsTrigger value="users" className="flex items-center space-x-2">
+            <TabsTrigger value="users" className="flex items-center space-x-2 dark:data-[state=active]:bg-gray-700">
               <Users className="w-4 h-4" />
               <span>Utilisateurs</span>
             </TabsTrigger>
@@ -305,7 +415,7 @@ const AdminDashboard = () => {
                   placeholder="Rechercher par nom, email ou service..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 dark:bg-gray-800 dark:border-gray-700"
+                  className="pl-10 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
                 />
               </div>
               <div className="flex gap-2">
@@ -369,40 +479,7 @@ const AdminDashboard = () => {
                         {contact.message}
                       </p>
 
-                      <div className="flex flex-wrap gap-2">
-                        {contact.status === 'nouveau' && (
-                          <Button
-                            size="sm"
-                            onClick={() => updateContactStatus(contact.id, 'traité')}
-                            className="bg-yellow-500 hover:bg-yellow-600 text-white"
-                          >
-                            <Eye className="w-4 h-4 mr-1" />
-                            Marquer comme traité
-                          </Button>
-                        )}
-                        {contact.status === 'traité' && (
-                          <Button
-                            size="sm"
-                            onClick={() => updateContactStatus(contact.id, 'fermé')}
-                            className="bg-green-500 hover:bg-green-600 text-white"
-                          >
-                            <CheckCircle className="w-4 h-4 mr-1" />
-                            Fermer
-                          </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => sendEmailConfirmation(contact.email, contact.name, 'contact', {
-                            service: contact.service,
-                            message: contact.message
-                          })}
-                          className="border-vilo-purple-300 text-vilo-purple-600 hover:bg-vilo-purple-50 dark:border-vilo-purple-400 dark:text-vilo-purple-400"
-                        >
-                          <Send className="w-4 h-4 mr-1" />
-                          Envoyer email
-                        </Button>
-                      </div>
+                      {renderContactActions(contact)}
                     </div>
                   ))}
                   {filteredContacts.length === 0 && (
@@ -451,49 +528,7 @@ const AdminDashboard = () => {
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap gap-2">
-                        {appointment.status === 'en_attente' && (
-                          <>
-                            <Button
-                              size="sm"
-                              onClick={() => updateAppointmentStatus(appointment.id, 'confirmé')}
-                              className="bg-green-500 hover:bg-green-600 text-white"
-                            >
-                              <CheckCircle className="w-4 h-4 mr-1" />
-                              Confirmer
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => updateAppointmentStatus(appointment.id, 'annulé')}
-                            >
-                              Annuler
-                            </Button>
-                          </>
-                        )}
-                        {appointment.status === 'confirmé' && (
-                          <Button
-                            size="sm"
-                            onClick={() => updateAppointmentStatus(appointment.id, 'terminé')}
-                            className="bg-gray-500 hover:bg-gray-600 text-white"
-                          >
-                            <CheckCircle className="w-4 h-4 mr-1" />
-                            Marquer comme terminé
-                          </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => sendEmailConfirmation(appointment.client_email, appointment.client_name, 'appointment', {
-                            date: new Date(appointment.date).toLocaleDateString('fr-FR'),
-                            time: appointment.time
-                          })}
-                          className="border-vilo-purple-300 text-vilo-purple-600 hover:bg-vilo-purple-50 dark:border-vilo-purple-400 dark:text-vilo-purple-400"
-                        >
-                          <Send className="w-4 h-4 mr-1" />
-                          Envoyer email
-                        </Button>
-                      </div>
+                      {renderAppointmentActions(appointment)}
                     </div>
                   ))}
                   {filteredAppointments.length === 0 && (

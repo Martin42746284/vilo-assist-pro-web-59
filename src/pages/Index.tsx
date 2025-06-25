@@ -20,23 +20,45 @@ import AppointmentCalendar from '@/components/AppointmentCalendar';
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors duration-300 dark:bg-gray-900 dark:text-gray-100">
+    <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
       <ScrollProgress />
       <Header />
       <section id="hero">
         <HeroSection />
       </section>
-      <AboutSection />
-      <ServicesSection />
-      <ProcessSection />
-      <PerformanceIndicators />
-      <PortfolioSection />
-      <CostCalculator />
-      <PricingSection />
-      <TestimonialsSection />
-      <AppointmentCalendar />
-      <FAQSection />
-      <ContactSection />
+      <div className="bg-gray-50 dark:bg-gray-800">
+        <AboutSection />
+      </div>
+      <div className="bg-white dark:bg-gray-900">
+        <ServicesSection />
+      </div>
+      <div className="bg-gray-50 dark:bg-gray-800">
+        <ProcessSection />
+      </div>
+      <div className="bg-white dark:bg-gray-900">
+        <PerformanceIndicators />
+      </div>
+      <div className="bg-gray-50 dark:bg-gray-800">
+        <PortfolioSection />
+      </div>
+      <div className="bg-white dark:bg-gray-900">
+        <CostCalculator />
+      </div>
+      <div className="bg-gray-50 dark:bg-gray-800">
+        <PricingSection />
+      </div>
+      <div className="bg-white dark:bg-gray-900">
+        <TestimonialsSection />
+      </div>
+      <div className="bg-gray-50 dark:bg-gray-800">
+        <AppointmentCalendar />
+      </div>
+      <div className="bg-white dark:bg-gray-900">
+        <FAQSection />
+      </div>
+      <div className="bg-gray-50 dark:bg-gray-800">
+        <ContactSection />
+      </div>
       <Footer />
       <ScrollToTop />
       <ChatWidget />

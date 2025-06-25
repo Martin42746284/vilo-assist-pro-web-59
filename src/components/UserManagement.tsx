@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
-import { User, Settings, Trash2, Search, UserPlus, Crown } from 'lucide-react';
+import { User, Settings, Trash2, Search, UserPlus, Crown, RefreshCw } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface UserProfile {
@@ -24,6 +24,7 @@ interface UserProfile {
 const UserManagement = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -32,44 +33,48 @@ const UserManagement = () => {
 
   const fetchUsers = async () => {
     try {
+      console.log('Fetching users...');
       setIsLoading(true);
       
-      // Fetch profiles with basic user data
+      // Fetch profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          first_name,
-          last_name,
-          avatar_url,
-          phone,
-          created_at
-        `);
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (profilesError) {
         console.error('Error fetching profiles:', profilesError);
         throw profilesError;
       }
 
-      // Fetch user roles separately
+      console.log('Profiles fetched:', profiles);
+
+      // Fetch user roles
       const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role');
 
       if (rolesError) {
         console.error('Error fetching roles:', rolesError);
-        // Don't throw here, roles are optional
+        // Continue without roles if there's an error
       }
 
-      // Create a simulated email for each user since we can't access auth.users
+      console.log('Roles fetched:', roles);
+
+      // Create users array with profile and role data
       const usersWithDetails: UserProfile[] = [];
       
       for (const profile of profiles || []) {
         const userRole = roles?.find(r => r.user_id === profile.id)?.role || 'user';
         
+        // Generate a more realistic email based on the profile
+        const email = profile.first_name && profile.last_name 
+          ? `${profile.first_name.toLowerCase()}.${profile.last_name.toLowerCase()}@viloassist.com`
+          : `user-${profile.id.slice(0, 8)}@viloassist.com`;
+        
         usersWithDetails.push({
           id: profile.id,
-          email: `user-${profile.id.slice(0, 8)}@viloassist.com`, // Simulated email
+          email,
           first_name: profile.first_name,
           last_name: profile.last_name,
           avatar_url: profile.avatar_url,
@@ -79,27 +84,53 @@ const UserManagement = () => {
         });
       }
 
+      console.log('Users with details:', usersWithDetails);
       setUsers(usersWithDetails);
+
+      if (usersWithDetails.length === 0) {
+        toast({
+          title: "Aucun utilisateur trouvé",
+          description: "Il n'y a actuellement aucun utilisateur inscrit.",
+        });
+      }
+
     } catch (error: any) {
       console.error('Error fetching users:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de charger les utilisateurs.",
+        description: `Impossible de charger les utilisateurs: ${error.message}`,
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
+  };
+
+  const refreshUsers = async () => {
+    setIsRefreshing(true);
+    await fetchUsers();
+    toast({
+      title: "Données actualisées",
+      description: "La liste des utilisateurs a été mise à jour",
+    });
   };
 
   const updateUserRole = async (userId: string, newRole: 'admin' | 'user') => {
     try {
+      console.log(`Updating role for user ${userId} to ${newRole}`);
+      
       // Check if user already has a role entry
-      const { data: existingRole } = await supabase
+      const { data: existingRole, error: checkError } = await supabase
         .from('user_roles')
         .select('id')
         .eq('user_id', userId)
         .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Error checking existing role:', checkError);
+        throw checkError;
+      }
 
       if (existingRole) {
         // Update existing role
@@ -131,19 +162,27 @@ const UserManagement = () => {
       console.error('Error updating user role:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de mettre à jour le rôle",
+        description: `Impossible de mettre à jour le rôle: ${error.message}`,
         variant: "destructive",
       });
     }
   };
 
   const deleteUser = async (userId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.')) {
       return;
     }
 
     try {
-      // Delete from profiles (this should cascade to user_roles due to foreign key)
+      console.log(`Deleting user ${userId}`);
+      
+      // Delete user role first (if exists)
+      await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId);
+
+      // Delete profile
       const { error } = await supabase
         .from('profiles')
         .delete()
@@ -161,7 +200,7 @@ const UserManagement = () => {
       console.error('Error deleting user:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de supprimer l'utilisateur",
+        description: `Impossible de supprimer l'utilisateur: ${error.message}`,
         variant: "destructive",
       });
     }
@@ -177,6 +216,8 @@ const UserManagement = () => {
     if (firstName && lastName) {
       return `${firstName} ${lastName}`;
     }
+    if (firstName) return firstName;
+    if (lastName) return lastName;
     return 'Nom non renseigné';
   };
 
@@ -192,7 +233,10 @@ const UserManagement = () => {
     return (
       <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardContent className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-vilo-purple-600"></div>
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-vilo-purple-600 mx-auto"></div>
+            <p className="text-gray-600 dark:text-gray-400">Chargement des utilisateurs...</p>
+          </div>
         </CardContent>
       </Card>
     );
@@ -201,10 +245,22 @@ const UserManagement = () => {
   return (
     <Card className="dark:bg-gray-800 dark:border-gray-700">
       <CardHeader>
-        <CardTitle className="flex items-center text-gray-800 dark:text-gray-100">
-          <User className="w-5 h-5 mr-2" />
-          Gestion des Utilisateurs ({filteredUsers.length})
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center text-gray-800 dark:text-gray-100">
+            <User className="w-5 h-5 mr-2" />
+            Gestion des Utilisateurs ({filteredUsers.length})
+          </CardTitle>
+          <Button
+            onClick={refreshUsers}
+            disabled={isRefreshing}
+            variant="outline"
+            size="sm"
+            className="border-vilo-purple-200 dark:border-vilo-purple-700 text-vilo-purple-600 dark:text-vilo-purple-400"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Actualiser
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         {/* Search */}
@@ -215,7 +271,7 @@ const UserManagement = () => {
               placeholder="Rechercher par nom ou email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 dark:bg-gray-700 dark:border-gray-600"
+              className="pl-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>
         </div>
@@ -223,7 +279,7 @@ const UserManagement = () => {
         {/* Users List */}
         <div className="space-y-4">
           {filteredUsers.map((user) => (
-            <div key={user.id} className="border dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-gray-700 hover:shadow-md transition-shadow">
+            <div key={user.id} className="border dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-gray-700 hover:shadow-md transition-all duration-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4 flex-1">
                   <Avatar className="h-12 w-12">
@@ -268,16 +324,16 @@ const UserManagement = () => {
                     value={user.role}
                     onValueChange={(value: 'admin' | 'user') => updateUserRole(user.id, value)}
                   >
-                    <SelectTrigger className="w-32">
+                    <SelectTrigger className="w-32 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="user">Utilisateur</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
+                    <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                      <SelectItem value="user" className="dark:text-white dark:focus:bg-gray-600">Utilisateur</SelectItem>
+                      <SelectItem value="admin" className="dark:text-white dark:focus:bg-gray-600">Admin</SelectItem>
                     </SelectContent>
                   </Select>
 
-                  {/* Actions */}
+                  {/* Delete Button */}
                   <Button
                     size="sm"
                     variant="destructive"
@@ -291,9 +347,13 @@ const UserManagement = () => {
             </div>
           ))}
 
-          {filteredUsers.length === 0 && (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              Aucun utilisateur trouvé
+          {filteredUsers.length === 0 && !isLoading && (
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              <User className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-medium mb-2">Aucun utilisateur trouvé</h3>
+              <p className="text-sm">
+                {searchTerm ? 'Aucun utilisateur ne correspond à votre recherche' : 'Aucun utilisateur inscrit pour le moment'}
+              </p>
             </div>
           )}
         </div>
