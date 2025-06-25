@@ -31,7 +31,6 @@ const AppContent = () => {
           path="/admin" 
           element={isAuthenticated ? <Admin /> : <Welcome />} 
         />
-        
         {/* User routes */}
         {user ? (
           <>
