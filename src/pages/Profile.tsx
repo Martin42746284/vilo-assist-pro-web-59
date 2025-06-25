@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { useAvatar } from '@/hooks/useAvatar';
 import { toast } from '@/hooks/use-toast';
 import { 
   User, 
@@ -16,13 +16,16 @@ import {
   Save, 
   Lock, 
   LogOut,
-  ArrowLeft
+  ArrowLeft,
+  Trash2,
+  Upload
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ThemeToggle from '@/components/ThemeToggle';
 
 const Profile = () => {
   const { user, profile, signOut, updateProfile, updatePassword } = useSupabaseAuth();
+  const { uploadAvatar, deleteAvatar, isUploading } = useAvatar();
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,10 +56,6 @@ const Profile = () => {
           variant: "destructive",
         });
       } else {
-        toast({
-          title: "Profil mis à jour",
-          description: "Vos informations ont été sauvegardées",
-        });
         setIsEditing(false);
       }
     } catch (error) {
@@ -100,10 +99,6 @@ const Profile = () => {
           variant: "destructive",
         });
       } else {
-        toast({
-          title: "Mot de passe modifié",
-          description: "Votre mot de passe a été mis à jour",
-        });
         setIsChangingPassword(false);
         setNewPassword('');
         setConfirmPassword('');
@@ -127,11 +122,18 @@ const Profile = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // For now, we'll just show a message that this feature is coming soon
-    toast({
-      title: "Fonctionnalité à venir",
-      description: "La modification de photo de profil sera bientôt disponible",
-    });
+    await uploadAvatar(file);
+    
+    // Clear the input so the same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDeleteAvatar = async () => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer votre photo de profil ?')) {
+      await deleteAvatar();
+    }
   };
 
   const getInitials = () => {
@@ -190,12 +192,21 @@ const Profile = () => {
                     {getInitials() || 'U'}
                   </AvatarFallback>
                 </Avatar>
+                
+                {/* Upload Button */}
                 <button
                   onClick={handleAvatarClick}
-                  className="absolute -bottom-1 -right-1 w-7 h-7 bg-vilo-purple-600 hover:bg-vilo-purple-700 rounded-full flex items-center justify-center transition-colors"
+                  disabled={isUploading}
+                  className="absolute -bottom-1 -right-1 w-7 h-7 bg-vilo-purple-600 hover:bg-vilo-purple-700 disabled:bg-gray-400 rounded-full flex items-center justify-center transition-colors"
+                  title="Changer la photo"
                 >
-                  <Camera className="w-4 h-4 text-white" />
+                  {isUploading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <Camera className="w-4 h-4 text-white" />
+                  )}
                 </button>
+                
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -204,7 +215,8 @@ const Profile = () => {
                   className="hidden"
                 />
               </div>
-              <div>
+              
+              <div className="flex-1">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   {profile?.first_name && profile?.last_name 
                     ? `${profile.first_name} ${profile.last_name}`
@@ -212,6 +224,33 @@ const Profile = () => {
                   }
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">{user?.email}</p>
+                
+                {/* Avatar Actions */}
+                <div className="flex items-center space-x-2 mt-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleAvatarClick}
+                    disabled={isUploading}
+                    className="text-xs"
+                  >
+                    <Upload className="w-3 h-3 mr-1" />
+                    {isUploading ? 'Upload...' : 'Changer'}
+                  </Button>
+                  
+                  {profile?.avatar_url && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleDeleteAvatar}
+                      disabled={isUploading}
+                      className="text-xs text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="w-3 h-3 mr-1" />
+                      Supprimer
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
 
