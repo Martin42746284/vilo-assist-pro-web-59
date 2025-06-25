@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import Index from '@/pages/Index';
 import Admin from '@/pages/Admin';
 import Welcome from '@/pages/Welcome';
+import Auth from '@/pages/Auth';
 import Profile from '@/pages/Profile';
 import NotFound from '@/pages/NotFound';
 
@@ -31,6 +32,8 @@ const AppContent = () => {
           path="/admin" 
           element={isAuthenticated ? <Admin /> : <Welcome />} 
         />
+        {/* Auth route - accessible to everyone */}
+        <Route path="/auth" element={<Auth />} />
         {/* User routes */}
         {user ? (
           <>

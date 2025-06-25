@@ -1,111 +1,21 @@
 
-import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
-import { useAuth } from '@/hooks/useAuth';
-import { toast } from '@/hooks/use-toast';
 import { 
-  Shield, 
-  User, 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff,
   Sparkles,
   CheckCircle,
   Star,
   ArrowRight,
   Clock,
   Globe,
-  Users
+  Users,
+  LogIn,
+  UserPlus
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import ThemeToggle from '@/components/ThemeToggle';
 
-type AuthMode = 'signin' | 'signup' | 'admin';
-
 const Welcome = () => {
-  const [authMode, setAuthMode] = useState<AuthMode>('signin');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const { signIn, signUp } = useSupabaseAuth();
-  const { login } = useAuth();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      if (authMode === 'admin') {
-        const success = await login(email, password);
-        if (success) {
-          window.location.href = '/admin';
-        } else {
-          toast({
-            title: "Erreur de connexion",
-            description: "Identifiants administrateur incorrects",
-            variant: "destructive",
-          });
-        }
-        return;
-      }
-
-      if (authMode === 'signup') {
-        const { error } = await signUp(email, password, firstName, lastName);
-        if (error) {
-          toast({
-            title: "Erreur d'inscription",
-            description: error.message,
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Inscription réussie",
-            description: "Vérifiez votre email pour confirmer votre compte",
-          });
-        }
-      } else {
-        const { error } = await signIn(email, password);
-        if (error) {
-          toast({
-            title: "Erreur de connexion",
-            description: error.message,
-            variant: "destructive",
-          });
-        }
-      }
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const resetForm = () => {
-    setEmail('');
-    setPassword('');
-    setFirstName('');
-    setLastName('');
-    setShowPassword(false);
-  };
-
-  const switchMode = (mode: AuthMode) => {
-    setAuthMode(mode);
-    resetForm();
-  };
-
   const features = [
     {
       icon: Clock,
@@ -120,7 +30,7 @@ const Welcome = () => {
       color: "from-blue-500 to-cyan-600"
     },
     {
-      icon: Shield,
+      icon: Globe,
       title: "Sécurisé",
       description: "Vos données sont protégées",
       color: "from-purple-500 to-violet-600"
@@ -216,191 +126,71 @@ const Welcome = () => {
             </div>
 
             {/* Call to Action */}
-            <div className="flex items-center space-x-4 animate-fade-in delay-1000">
-              <Button className="bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 hover:from-vilo-purple-700 hover:to-vilo-pink-700 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group">
-                Commencer maintenant
-                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
+            <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 animate-fade-in delay-1000">
+              <Link to="/auth">
+                <Button className="w-full sm:w-auto bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 hover:from-vilo-purple-700 hover:to-vilo-pink-700 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group">
+                  Commencer maintenant
+                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
               <div className="text-sm text-gray-500 dark:text-gray-400">
                 Essai gratuit • Sans engagement
               </div>
             </div>
           </div>
 
-          {/* Right Side - Auth Card */}
+          {/* Right Side - Auth Buttons Card */}
           <div className="flex justify-center animate-fade-in delay-700">
             <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg hover:shadow-3xl transition-all duration-500 hover:scale-105">
               <CardHeader className="text-center pb-4">
                 <div className="mx-auto w-20 h-20 bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 rounded-3xl flex items-center justify-center mb-6 shadow-lg animate-pulse">
-                  {authMode === 'admin' ? (
-                    <Shield className="w-10 h-10 text-white" />
-                  ) : (
-                    <User className="w-10 h-10 text-white" />
-                  )}
+                  <Sparkles className="w-10 h-10 text-white" />
                 </div>
                 <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {authMode === 'admin' ? 'Administration' : 
-                   authMode === 'signup' ? 'Créer un compte' : 'Connexion'}
+                  Accédez à votre espace
                 </CardTitle>
                 <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  {authMode === 'admin' ? 'Accès réservé aux administrateurs' :
-                   authMode === 'signup' ? 'Rejoignez notre plateforme' : 'Accédez à votre espace'}
+                  Connectez-vous ou créez votre compte pour commencer
                 </p>
               </CardHeader>
 
-              <CardContent className="space-y-6">
-                {/* Auth Mode Switcher */}
-                {authMode !== 'admin' && (
-                  <div className="flex space-x-2 bg-gray-100 dark:bg-gray-700 rounded-xl p-1">
-                    <Button
-                      type="button"
-                      variant={authMode === 'signin' ? 'default' : 'ghost'}
-                      onClick={() => switchMode('signin')}
-                      className="flex-1 h-10 text-sm transition-all duration-300"
-                    >
-                      Connexion
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={authMode === 'signup' ? 'default' : 'ghost'}
-                      onClick={() => switchMode('signup')}
-                      className="flex-1 h-10 text-sm transition-all duration-300"
-                    >
-                      Inscription
-                    </Button>
-                  </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  {/* Name fields for signup */}
-                  {authMode === 'signup' && (
-                    <div className="grid grid-cols-2 gap-3 animate-fade-in">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Prénom
-                        </Label>
-                        <Input
-                          id="firstName"
-                          value={firstName}
-                          onChange={(e) => setFirstName(e.target.value)}
-                          placeholder="Prénom"
-                          className="h-11 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-vilo-purple-500"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Nom
-                        </Label>
-                        <Input
-                          id="lastName"
-                          value={lastName}
-                          onChange={(e) => setLastName(e.target.value)}
-                          placeholder="Nom"
-                          className="h-11 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-vilo-purple-500"
-                          required
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Email */}
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Email
-                    </Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-                      <Input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder={authMode === 'admin' ? 'admin@viloassist.com' : 'votre@email.com'}
-                        className="pl-11 h-12 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-vilo-purple-500"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Password */}
-                  <div className="space-y-2">
-                    <Label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Mot de passe
-                    </Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-                      <Input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className="pl-11 pr-12 h-12 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-vilo-purple-500"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                      >
-                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full h-12 bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 hover:from-vilo-purple-700 hover:to-vilo-pink-700 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              <CardContent className="space-y-4">
+                {/* Sign In Button */}
+                <Link to="/auth">
+                  <Button 
+                    className="w-full h-12 bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 hover:from-vilo-purple-700 hover:to-vilo-pink-700 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 group"
                   >
-                    {isLoading ? (
-                      <div className="flex items-center">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                        Connexion...
-                      </div>
-                    ) : (
-                      authMode === 'signup' ? 'Créer le compte' : 'Se connecter'
-                    )}
+                    <LogIn className="w-5 h-5 mr-2 group-hover:translate-x-1 transition-transform" />
+                    Se connecter
                   </Button>
-                </form>
+                </Link>
 
-                {/* Admin Access */}
-                {authMode !== 'admin' && (
-                  <>
-                    <Separator className="dark:bg-gray-600" />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => switchMode('admin')}
-                      className="w-full h-11 border-vilo-purple-300 dark:border-vilo-purple-400 text-vilo-purple-600 dark:text-vilo-purple-400 hover:bg-vilo-purple-50 dark:hover:bg-vilo-purple-900/20 transition-all duration-300"
-                    >
-                      <Shield className="w-5 h-5 mr-2" />
-                      Accès Administration
-                    </Button>
-                  </>
-                )}
-
-                {/* Demo credentials for admin */}
-                {authMode === 'admin' && (
-                  <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
-                    <p className="text-xs text-blue-600 dark:text-blue-400 text-center">
-                      <strong>Démo:</strong> admin@viloassist.com / admin123
-                    </p>
-                  </div>
-                )}
-
-                {/* Back to user auth */}
-                {authMode === 'admin' && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => switchMode('signin')}
-                    className="w-full h-9 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                {/* Sign Up Button */}
+                <Link to="/auth">
+                  <Button 
+                    variant="outline"
+                    className="w-full h-12 border-2 border-vilo-purple-300 dark:border-vilo-purple-400 text-vilo-purple-600 dark:text-vilo-purple-400 hover:bg-vilo-purple-50 dark:hover:bg-vilo-purple-900/20 font-medium transition-all duration-300 group"
                   >
-                    ← Retour à l'espace utilisateur
+                    <UserPlus className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+                    Créer un compte
                   </Button>
-                )}
+                </Link>
+
+                {/* Features Preview */}
+                <div className="mt-6 space-y-3">
+                  <div className="flex items-center space-x-3 text-sm text-gray-600 dark:text-gray-300">
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    <span>Accès immédiat à tous nos services</span>
+                  </div>
+                  <div className="flex items-center space-x-3 text-sm text-gray-600 dark:text-gray-300">
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    <span>Support client 24h/7j</span>
+                  </div>
+                  <div className="flex items-center space-x-3 text-sm text-gray-600 dark:text-gray-300">
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    <span>Tarification transparente à 10€/h</span>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
