@@ -1,7 +1,6 @@
 
 import { useAuth } from '@/hooks/useAuth';
 import AdminLogin from './AdminLogin';
-import LoadingSpinner from './LoadingSpinner';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
