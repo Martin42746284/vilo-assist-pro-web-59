@@ -1,36 +1,30 @@
 
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
-  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Credentials admin simples 
-const ADMIN_EMAIL = "admin@viloassist.com";
-const ADMIN_PASSWORD = "admin123";
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
+  // Check if admin is logged in on mount
   useEffect(() => {
-    // Vérifier si l'utilisateur est déjà connecté
-    const token = localStorage.getItem('admin_token');
-    if (token === 'authenticated') {
-      setIsAuthenticated(true);
-    }
-    setIsLoading(false);
+    const adminLoggedIn = localStorage.getItem('admin-logged-in');
+    setIsAuthenticated(adminLoggedIn === 'true');
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+  const login = async (username: string, password: string): Promise<boolean> => {
+    // Simple admin login - in production, this should be more secure
+    if (username === 'admin' && password === 'admin123') {
       setIsAuthenticated(true);
-      localStorage.setItem('admin_token', 'authenticated');
+      localStorage.setItem('admin-logged-in', 'true');
       return true;
     }
     return false;
@@ -38,11 +32,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin-logged-in');
+    // Redirect to home page after logout
+    navigate('/');
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

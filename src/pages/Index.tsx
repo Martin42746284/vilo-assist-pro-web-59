@@ -5,6 +5,7 @@ import AboutSection from '@/components/AboutSection';
 import ServicesSection from '@/components/ServicesSection';
 import ProcessSection from '@/components/ProcessSection';
 import PortfolioSection from '@/components/PortfolioSection';
+import ProjectGallery from '@/components/ProjectGallery';
 import CostCalculator from '@/components/CostCalculator';
 import PricingSection from '@/components/PricingSection';
 import TestimonialsSection from '@/components/TestimonialsSection';
@@ -42,21 +43,24 @@ const Index = () => {
         <PortfolioSection />
       </div>
       <div className="bg-white dark:bg-gray-900">
+        <ProjectGallery />
+      </div>
+      <div className="bg-gray-50 dark:bg-gray-800">
         <CostCalculator />
       </div>
-      <div className="bg-gray-50 dark:bg-gray-800">
+      <div className="bg-white dark:bg-gray-900">
         <PricingSection />
       </div>
-      <div className="bg-white dark:bg-gray-900">
+      <div className="bg-gray-50 dark:bg-gray-800">
         <TestimonialsSection />
       </div>
-      <div className="bg-gray-50 dark:bg-gray-800">
+      <div className="bg-white dark:bg-gray-900">
         <AppointmentCalendar />
       </div>
-      <div className="bg-white dark:bg-gray-900">
+      <div className="bg-gray-50 dark:bg-gray-800">
         <FAQSection />
       </div>
-      <div className="bg-gray-50 dark:bg-gray-800">
+      <div className="bg-white dark:bg-gray-900">
         <ContactSection />
       </div>
       <Footer />

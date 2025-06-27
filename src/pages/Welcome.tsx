@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -14,8 +13,12 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ThemeToggle from '@/components/ThemeToggle';
+import LanguageToggle from '@/components/LanguageToggle';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const Welcome = () => {
+  const { t } = useLanguage();
+
   const features = [
     {
       icon: Clock,
@@ -61,7 +64,8 @@ const Welcome = () => {
             VILO ASSIST-PRO
           </h1>
         </div>
-        <div className="animate-fade-in delay-300">
+        <div className="flex items-center space-x-2 animate-fade-in delay-300">
+          <LanguageToggle />
           <ThemeToggle />
         </div>
       </div>
@@ -72,14 +76,10 @@ const Welcome = () => {
           <div className="space-y-8 animate-fade-in delay-500">
             <div className="space-y-6">
               <h2 className="text-4xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight">
-                Bienvenue chez{' '}
-                <span className="bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 bg-clip-text text-transparent animate-pulse">
-                  VILO ASSIST-PRO
-                </span>
+                {t('welcome.title')}
               </h2>
               <p className="text-xl text-gray-600 dark:text-gray-300 leading-relaxed">
-                Votre partenaire de confiance pour l'assistance virtuelle professionnelle. 
-                Découvrez nos services d'exception basés à Madagascar.
+                {t('welcome.subtitle')}
               </p>
               <div className="flex items-center space-x-4 animate-slide-in-right delay-700">
                 <div className="flex -space-x-2">

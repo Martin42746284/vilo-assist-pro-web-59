@@ -1,12 +1,14 @@
-
 import { useState, useEffect } from 'react';
 import { Star, Quote, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import TestimonialForm from './TestimonialForm';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const TestimonialsSection = () => {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
+  const { t } = useLanguage();
 
   const testimonials = [
     {
@@ -78,13 +80,18 @@ const TestimonialsSection = () => {
   return (
     <section id="testimonials" className="py-20 bg-white dark:bg-gray-900 overflow-hidden transition-colors duration-300">
       <div className="container mx-auto px-4">
-        <div className={`text-center space-y-4 mb-16 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+        <div className={`text-center space-y-4 mb-12 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-vilo-purple-600 to-vilo-pink-600 bg-clip-text text-transparent">
-            Ils nous font confiance
+            {t('testimonials.title')}
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Découvrez ce que nos clients pensent de nos services d'assistance virtuelle
           </p>
+        </div>
+
+        {/* Add Testimonial Button */}
+        <div className="flex justify-center mb-12">
+          <TestimonialForm />
         </div>
 
         <div className="relative max-w-4xl mx-auto">

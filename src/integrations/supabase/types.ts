@@ -99,30 +99,111 @@ export type Database = {
         }
         Relationships: []
       }
+      project_gallery: {
+        Row: {
+          after_image_url: string | null
+          before_image_url: string | null
+          category: string
+          client_name: string | null
+          completion_date: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_featured: boolean | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          after_image_url?: string | null
+          before_image_url?: string | null
+          category: string
+          client_name?: string | null
+          completion_date?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          after_image_url?: string | null
+          before_image_url?: string | null
+          category?: string
+          client_name?: string | null
+          completion_date?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       testimonials: {
         Row: {
+          avatar_url: string | null
           commentaire: string
           created_at: string | null
           date: string
+          domain: string | null
           id: string
+          is_published: boolean | null
           name: string
           note: string
+          service: string | null
+          status: string | null
         }
         Insert: {
+          avatar_url?: string | null
           commentaire: string
           created_at?: string | null
           date: string
+          domain?: string | null
           id?: string
+          is_published?: boolean | null
           name: string
           note: string
+          service?: string | null
+          status?: string | null
         }
         Update: {
+          avatar_url?: string | null
           commentaire?: string
           created_at?: string | null
           date?: string
+          domain?: string | null
           id?: string
+          is_published?: boolean | null
           name?: string
           note?: string
+          service?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      translations: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          language: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          language: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          language?: string
+          value?: string
         }
         Relationships: []
       }
